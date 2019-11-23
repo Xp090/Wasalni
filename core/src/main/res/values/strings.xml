@@ -1,0 +1,14 @@
+<resources>
+    <!--Failure-->
+    <string name="unknown_error">Unknown Error</string>
+    <string name="wrong_username_or_password">Wrong username or password</string>
+    <string name="network_error">Network Error</string>
+
+    <string name="app_name">Wasalni Core</string>
+    <string name="title_activity_base">BaseActivity</string>
+    <string name="starbugs_credits">Wasalni Developed by</string>
+    <string name="star_bugs">StarBugs</string>
+    <string name="permsissons_requreid">Permissons Required</string>
+    <string name="you_cant_use_app">You can\'t use the Wasalni wihout allowing the required permissions</string>
+
+</resources>

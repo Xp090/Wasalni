@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Wasalni driver</string>
+    <string name="login">Login</string>
+    <string name="tracking_your_location">Tracking your location</string>
+</resources>
