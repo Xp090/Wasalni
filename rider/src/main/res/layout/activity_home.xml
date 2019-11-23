@@ -5,18 +5,7 @@
 
     <data>
 
-        <import type="java.util.List"/>
-        <variable
-            name="list"
-            type="java.util.List&lt;String&gt;"/>
         <import type="com.starbugs.wasalni_core.data.holder.TripStateUtil"/>
-
-        <import type="com.starbugs.wasalni_core.data.holder.TripStateHolder.Init"/>
-        <import type="com.starbugs.wasalni_core.data.holder.TripStateHolder.SelectDestination"/>
-        <import type="com.starbugs.wasalni_core.data.holder.TripStateHolder.SelectPickUp"/>
-        <import type="com.starbugs.wasalni_core.data.holder.TripStateHolder.ShowCost"/>
-        <import type="com.starbugs.wasalni_core.data.holder.TripStateHolder.FindDriver"/>
-        <import type="com.starbugs.wasalni_core.data.holder.TripStateHolder.TripStarted"/>
 
         <variable name="TripStateInit"
             type="com.starbugs.wasalni_core.data.holder.TripStateHolder.Init"/>
@@ -30,7 +19,6 @@
             type="com.starbugs.wasalni_core.data.holder.TripStateHolder.FindDriver"/>
         <variable name="TripStateTripStarted"
             type="com.starbugs.wasalni_core.data.holder.TripStateHolder.TripStarted"/>
-
 
 
         <variable
@@ -50,9 +38,7 @@
             android:name="com.starbugs.wasalni_core.util.view.RxMapsFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:context=".HomeActivity"
-            tools:layout_editor_absoluteX="0dp"
-            tools:layout_editor_absoluteY="-37dp" />
+            tools:context=".HomeActivity" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/destination_place_container"
@@ -60,10 +46,11 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:tripState="@{mViewModel.tripUiState}"
-            app:showWhenTrip="@{TripStateUtil.conditionsFrom(TripStarted.INSTANCE)}"
             app:cardCornerRadius="4dp"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:tripState="@{mViewModel.tripUiState}"
+            app:visibleWhenTrip="@{TripStateUtil.conditionsFrom(TripStateSelectDestination.INSTANCE)}"
+            >
             <fragment
                 android:id="@+id/destination_place_select"
                 android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
@@ -80,7 +67,10 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/destination_place_container"
             app:cardCornerRadius="4dp"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:tripState="@{mViewModel.tripUiState}"
+            app:visibleWhenTrip="@{TripStateUtil.conditionsFrom(TripStateSelectPickUp.INSTANCE)}"
+            >
             <fragment
                 android:id="@+id/pickup_place_select"
                 android:name="com.google.android.libraries.places.widget.AutocompleteSupportFragment"
@@ -94,7 +84,9 @@
             android:id="@+id/pin"
             android:layout_width="48dp"
             android:layout_height="48dp"
-            android:src="@drawable/drop_pin_destination"
+            android:src="@{mViewModel.tripUiState == TripStateSelectDestination.INSTANCE ? @drawable/drop_pin_destination : @drawable/drop_pin_pickup }"
+            app:tripState="@{mViewModel.tripUiState}"
+            app:showWhenTrip="@{TripStateUtil.conditionsFrom(TripStateSelectDestination.INSTANCE,TripStateSelectPickUp.INSTANCE)}"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
@@ -122,12 +114,17 @@
             app:layout_constraintTop_toBottomOf="@id/lat" />
 
         <Button
+            android:id="@+id/tripActionBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Request"
+            tools:text="Request"
+            app:tripActionButtonText="@{mViewModel.tripUiState}"
             app:layout_constraintBottom_toBottomOf="@+id/map"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:tripState="@{mViewModel.tripUiState}"
+            app:goneWhenTrip="@{TripStateUtil.conditionsFrom(TripStateTripStarted.INSTANCE)}"
+            />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>

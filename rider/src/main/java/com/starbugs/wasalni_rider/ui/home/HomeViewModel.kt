@@ -19,10 +19,9 @@ class HomeViewModel(private val tripRepository: TripRepository) : BaseViewModel(
 
     val currentLocation = tripRepository.currentLocation
 
-    val destinationAddress = MutableLiveData<String>()
-    val pickUpAddress = MutableLiveData<String>()
-
     val tripRequest = TripRequest()
+
+    val isLoading = MutableLiveData<Boolean>(false)
 
     fun driverLocation(): LiveData<LatLng> {
         return launchWithLiveData { liveData ->
@@ -34,27 +33,16 @@ class HomeViewModel(private val tripRepository: TripRepository) : BaseViewModel(
         }
     }
 
-    fun geocodeDestinationLocation(location: LatLng): LiveData<String> {
-        geocodeAddress(location){
-            destinationAddress.value = it
-        }
 
-        return destinationAddress
-    }
-
-    fun geocodePickupLocation(location: LatLng): LiveData<String> {
-        geocodeAddress(location){
-            pickUpAddress.value = it
-        }
-        return pickUpAddress
-    }
-
-
-    private fun geocodeAddress(location: LatLng, callback: (address: String) -> Unit) {
-        launch {
+    fun geocodeAddress(location: LatLng): LiveData<String> {
+       isLoading.value = true
+        return launchWithLiveData { liveData ->
             tripRepository.geocodeLocation(location)
                 .schedule()
-                .subscribe(callback)
+                .subscribe { address ->
+                    liveData.value = address
+                    isLoading.value = false
+                }
         }
     }
 }

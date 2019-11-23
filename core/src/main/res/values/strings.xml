@@ -10,5 +10,11 @@
     <string name="star_bugs">StarBugs</string>
     <string name="permsissons_requreid">Permissons Required</string>
     <string name="you_cant_use_app">You can\'t use the Wasalni wihout allowing the required permissions</string>
+    <string name="begin">Begin</string>
+    <string name="confirm_destination">Confirm Destination</string>
+    <string name="confirm_pickup">Confirm Pickup</string>
+    <string name="find_driver">Find Driver</string>
+    <string name="cancel">Cancel</string>
+    <string name="trip_started">Trip Started</string>
 
 </resources>

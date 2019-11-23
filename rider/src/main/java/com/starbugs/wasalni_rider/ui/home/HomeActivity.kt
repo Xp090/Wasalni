@@ -24,6 +24,7 @@ import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.RectangularBounds
 import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
 import com.google.maps.android.SphericalUtil
+import com.starbugs.wasalni_core.data.holder.TripStateHolder
 import com.starbugs.wasalni_core.util.ext.observeOnce
 import com.starbugs.wasalni_core.util.ext.setOnPlaceSelectedListener
 import com.starbugs.wasalni_core.util.view.OnRxMapReadyCallback
@@ -63,7 +64,8 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
         destinationPlaceSelect.setCountry("EG")
 
         destinationPlaceSelect.setOnPlaceSelectedListener {
-            Timber.e(it.toString())
+            mViewModel.tripRequest.destinationAddress = it.address
+            mViewModel.tripRequest.destinationPoint = it.latLng
         }
 
 
@@ -75,13 +77,13 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
         )
         pickupPlaceSelect.setCountry("EG")
         pickupPlaceSelect.setOnPlaceSelectedListener {
-            Timber.e(it.toString())
-
+            mViewModel.tripRequest.pickupAddress = it.address
+            mViewModel.tripRequest.pickupPoint = it.latLng
         }
 
-        mViewModel.destinationAddress.observe(this, Observer {
-            destinationPlaceSelect.setText(it)
-        })
+        binding.tripActionBtn.setOnClickListener {
+
+        }
     }
 
     override fun onStart() {
@@ -121,12 +123,7 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
             rxGoogleMap.mapInstance.animateCamera(CameraUpdateFactory.newLatLngZoom(it, 15.0f))
             val northeast = SphericalUtil.computeOffset(it, 10000.0, 45.0)
             val southwest = SphericalUtil.computeOffset(it, 10000.0, 225.0)
-            destinationPlaceSelect.setLocationBias(
-                RectangularBounds.newInstance(
-                    southwest,
-                    northeast
-                )
-            )
+            destinationPlaceSelect.setLocationBias(RectangularBounds.newInstance(southwest, northeast))
             pickupPlaceSelect.setLocationBias(RectangularBounds.newInstance(southwest, northeast))
         })
     }
@@ -140,7 +137,20 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
         rxGoogleMap.onCameraIdleListenerWithDebounce(500) {
             lat.text = it.latitude.toString()
             lng.text = it.longitude.toString()
-            mViewModel.geocodeDestinationLocation(it)
+            if (mViewModel.tripUiState.value is TripStateHolder.SelectDestination) {
+                mViewModel.tripRequest.destinationPoint = it
+                mViewModel.geocodeAddress(it).observeOnce(this, Observer {address ->
+                    destinationPlaceSelect.setText(address)
+                    mViewModel.tripRequest.destinationAddress = address
+                })
+            } else if (mViewModel.tripUiState.value is TripStateHolder.SelectPickUp) {
+                mViewModel.tripRequest.pickupPoint = it
+                mViewModel.geocodeAddress(it).observeOnce(this, Observer {address ->
+                    pickupPlaceSelect.setText(address)
+                    mViewModel.tripRequest.pickupAddress = address
+                })
+            }
+
         }
     }
 
