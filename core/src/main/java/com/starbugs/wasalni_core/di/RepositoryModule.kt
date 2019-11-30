@@ -9,6 +9,7 @@ import com.starbugs.wasalni_core.data.repository.TripRepository
 import com.starbugs.wasalni_core.data.repository.UserRepository
 import com.starbugs.wasalni_core.data.source.SharedPreferenceSource
 import com.starbugs.wasalni_core.data.source.WasalniSocket
+import com.starbugs.wasalni_core.data.source.WasalniTripApi
 import com.starbugs.wasalni_core.data.source.WasalniUserApi
 import com.starbugs.wasalni_core.util.WasalniInterceptor
 import io.reactivex.schedulers.Schedulers
@@ -24,24 +25,22 @@ import java.util.concurrent.TimeUnit
 
 val repositoryModule = module {
 
-    single(createdAtStart = true) { createOkHttpClient(get()) }
-    single(createdAtStart = true) { createRetrofit(get()) }
-    single(createdAtStart = true) { createWebService<WasalniUserApi>(get()) }
-    single(createdAtStart = true) { WasalniInterceptor(get()) }
-    single {Geocoder(androidContext())}
-    single { Moshi.Builder().build()}
-    single { WasalniSocket(get(),get()) }
-    single { TripRepository(get(),get())}
+    single { createOkHttpClient(get()) }
+    single { createRetrofit(get()) }
+    single { createWebService<WasalniUserApi>(get()) }
+    single { createWebService<WasalniTripApi>(get()) }
+
+    single { WasalniInterceptor(get()) }
+    single { Geocoder(androidContext()) }
+    single { Moshi.Builder().build() }
+    single { WasalniSocket(get(), get()) }
+    single { TripRepository(get(), get(), get()) }
 
 
 
     single { SharedPreferenceSource(androidContext()) }
-    single { UserRepository(get(),get()) }
+    single { UserRepository(get(), get()) }
     single { CredentialsRepository(get()) }
-
-
-
-
 
 
 }
@@ -65,8 +64,10 @@ fun createRetrofit(okHttpClient: OkHttpClient): Retrofit {
         .baseUrl(BuildConfig.BASE_URL)
         .client(okHttpClient)
         .addConverterFactory(MoshiConverterFactory.create(moshi))
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io())).build()
+        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
+        .build()
 }
+
 inline fun <reified T> createWebService(retrofit: Retrofit): T {
     return retrofit.create(T::class.java)
 }

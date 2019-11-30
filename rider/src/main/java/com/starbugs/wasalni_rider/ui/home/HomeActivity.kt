@@ -4,10 +4,12 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
 import androidx.lifecycle.Observer
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.*
 import com.starbugs.wasalni_core.ui.BaseActivity
 import com.starbugs.wasalni_rider.R
 
@@ -19,12 +21,13 @@ import com.starbugs.wasalni_rider.databinding.ActivityHomeBinding
 import com.starbugs.wasalni_rider.service.RiderTrackingService
 import kotlinx.android.synthetic.main.activity_home.*
 import com.google.android.libraries.places.widget.AutocompleteSupportFragment
-import com.google.android.gms.common.api.Status
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.api.model.RectangularBounds
-import com.google.android.libraries.places.widget.listener.PlaceSelectionListener
+import com.google.maps.android.PolyUtil
 import com.google.maps.android.SphericalUtil
+import com.starbugs.wasalni_core.data.holder.NetworkState
 import com.starbugs.wasalni_core.data.holder.TripStateHolder
+import com.starbugs.wasalni_core.data.model.TripEstimiatedInfo
 import com.starbugs.wasalni_core.util.ext.observeOnce
 import com.starbugs.wasalni_core.util.ext.setOnPlaceSelectedListener
 import com.starbugs.wasalni_core.util.view.OnRxMapReadyCallback
@@ -45,6 +48,9 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
     private lateinit var destinationPlaceSelect: AutocompleteSupportFragment
     private lateinit var pickupPlaceSelect: AutocompleteSupportFragment
 
+    private var destinationMarker: Marker? = null
+    private var pickUpMarker: Marker? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val mapFragment = supportFragmentManager
@@ -64,8 +70,9 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
         destinationPlaceSelect.setCountry("EG")
 
         destinationPlaceSelect.setOnPlaceSelectedListener {
-            mViewModel.tripRequest.destinationAddress = it.address
-            mViewModel.tripRequest.destinationPoint = it.latLng
+            mViewModel.tripRequest.value?.destinationAddress = it.address
+            mViewModel.tripRequest.value?.destinationPoint = it.latLng
+            setDestinationMarker(it.latLng!!)
         }
 
 
@@ -77,11 +84,39 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
         )
         pickupPlaceSelect.setCountry("EG")
         pickupPlaceSelect.setOnPlaceSelectedListener {
-            mViewModel.tripRequest.pickupAddress = it.address
-            mViewModel.tripRequest.pickupPoint = it.latLng
+            mViewModel.tripRequest.value?.pickupAddress = it.address
+            mViewModel.tripRequest.value?.pickupPoint = it.latLng
+            setPickUpMarker(it.latLng!!)
         }
 
         binding.tripActionBtn.setOnClickListener {
+            when(mViewModel.tripUiState.value){
+                is TripStateHolder.SelectDestination -> {
+                    setDestinationMarker(animate = false)
+                    rxGoogleMap.mapInstance.animateCamera(CameraUpdateFactory.newLatLngZoom(mViewModel.currentLocation.value!!,15.0f))
+                }
+                is TripStateHolder.SelectPickUp -> {
+                    setPickUpMarker(animate = false)
+                    mViewModel.isLoading.value = true
+                    mViewModel.getTripEstimatedInfo().observeOnce(this,
+                        Observer {
+                            when (it) {
+                                is NetworkState.Success -> {
+                                    val points = it.data.tripDirections.polylines
+                                        .flatMap {poly -> PolyUtil.decode(poly) }
+                                    val polylineOptions = PolylineOptions()
+                                        .addAll(points)
+                                        .width(10f)
+                                        .color(Color.RED)
+                                    rxGoogleMap.mapInstance.addPolyline(polylineOptions)
+                                    mViewModel.isLoading.value = false
+                                }
+                            }
+                        })
+                }
+
+            }
+            mViewModel.tripUiState.nextState()
 
         }
     }
@@ -120,7 +155,7 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
         trackingService = binder.service as RiderTrackingService
 
         mViewModel.currentLocation.observeOnce(this, Observer {
-            rxGoogleMap.mapInstance.animateCamera(CameraUpdateFactory.newLatLngZoom(it, 15.0f))
+            rxGoogleMap.mapInstance.moveCamera(CameraUpdateFactory.newLatLngZoom(it, 15.0f))
             val northeast = SphericalUtil.computeOffset(it, 10000.0, 45.0)
             val southwest = SphericalUtil.computeOffset(it, 10000.0, 225.0)
             destinationPlaceSelect.setLocationBias(RectangularBounds.newInstance(southwest, northeast))
@@ -138,20 +173,36 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
             lat.text = it.latitude.toString()
             lng.text = it.longitude.toString()
             if (mViewModel.tripUiState.value is TripStateHolder.SelectDestination) {
-                mViewModel.tripRequest.destinationPoint = it
+                mViewModel.tripRequest.value?.destinationPoint = it
                 mViewModel.geocodeAddress(it).observeOnce(this, Observer {address ->
                     destinationPlaceSelect.setText(address)
-                    mViewModel.tripRequest.destinationAddress = address
+                    mViewModel.tripRequest.value?.destinationAddress = address
                 })
             } else if (mViewModel.tripUiState.value is TripStateHolder.SelectPickUp) {
-                mViewModel.tripRequest.pickupPoint = it
+                mViewModel.tripRequest.value?.pickupPoint = it
                 mViewModel.geocodeAddress(it).observeOnce(this, Observer {address ->
                     pickupPlaceSelect.setText(address)
-                    mViewModel.tripRequest.pickupAddress = address
+                    mViewModel.tripRequest.value?.pickupAddress = address
                 })
             }
 
         }
+    }
+
+    private fun setDestinationMarker (lngLat: LatLng = rxGoogleMap.mapInstance.cameraPosition.target, animate: Boolean = true){
+      destinationMarker =  rxGoogleMap.mapInstance.addMarker(MarkerOptions()
+            .position(lngLat)
+            .icon(BitmapDescriptorFactory.fromResource(R.drawable.destination_marker_wasalni))
+        )
+      if (animate) rxGoogleMap.mapInstance.animateCamera(CameraUpdateFactory.newLatLngZoom(lngLat,15.0f))
+    }
+
+    private fun setPickUpMarker (lngLat: LatLng = rxGoogleMap.mapInstance.cameraPosition.target, animate: Boolean = true){
+      pickUpMarker = rxGoogleMap.mapInstance.addMarker(MarkerOptions()
+            .position(lngLat)
+            .icon(BitmapDescriptorFactory.fromResource(R.drawable.wasalni_marker))
+        )
+        if (animate) rxGoogleMap.mapInstance.animateCamera(CameraUpdateFactory.newLatLngZoom(lngLat,15.0f))
     }
 
 }

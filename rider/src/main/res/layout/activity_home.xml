@@ -4,7 +4,7 @@
     tools:context=".HomeActivity">
 
     <data>
-
+        <import type="android.view.View"/>
         <import type="com.starbugs.wasalni_core.data.holder.TripStateUtil"/>
 
         <variable name="TripStateInit"
@@ -19,7 +19,6 @@
             type="com.starbugs.wasalni_core.data.holder.TripStateHolder.FindDriver"/>
         <variable name="TripStateTripStarted"
             type="com.starbugs.wasalni_core.data.holder.TripStateHolder.TripStarted"/>
-
 
         <variable
             name="mViewModel"
@@ -97,6 +96,7 @@
             android:id="@+id/lat"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:text="lat"
             android:textColor="#F30000"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -108,16 +108,67 @@
             android:id="@+id/lng"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:visibility="gone"
             android:text="lng"
             android:textColor="#F30000"
             app:layout_constraintStart_toStartOf="@id/lat"
             app:layout_constraintTop_toBottomOf="@id/lat" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:tripState="@{mViewModel.tripUiState}"
+            app:showWhenTrip="@{TripStateUtil.conditionsFrom(TripStateShowCost.INSTANCE)}"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/tripActionBtn"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <LinearLayout
+                android:padding="8dp"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+<!--                <TextView-->
+<!--                    android:id="@+id/fromAddress"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:text="@{mViewModel.tripRequest.pickupAddress}"-->
+<!--                    tools:text="from" />-->
+
+<!--                <TextView-->
+<!--                    android:id="@+id/toAddress"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="match_parent"-->
+<!--                    android:text="@{mViewModel.tripRequest.destinationAddress}"-->
+<!--                    tools:text="from" />-->
+
+                <TextView
+                    android:id="@+id/tripInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="@{`Distance: ` + mViewModel.tripEstimatedInfo.tripDirections.distance.text + `    Duration: `  + mViewModel.tripEstimatedInfo.tripDirections.duration.text}"
+                    tools:text="from" />
+
+                <TextView
+                    android:id="@+id/tripCost"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="@{`Cost: ` +  mViewModel.tripEstimatedInfo.tripEconomy.cost + ` EGP`}"
+                    tools:text="from" />
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+
 
         <Button
             android:id="@+id/tripActionBtn"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             tools:text="Request"
+            android:enabled="@{!mViewModel.isLoading}"
             app:tripActionButtonText="@{mViewModel.tripUiState}"
             app:layout_constraintBottom_toBottomOf="@+id/map"
             app:layout_constraintEnd_toEndOf="parent"
@@ -125,6 +176,16 @@
             app:tripState="@{mViewModel.tripUiState}"
             app:goneWhenTrip="@{TripStateUtil.conditionsFrom(TripStateTripStarted.INSTANCE)}"
             />
+
+        <ProgressBar
+            app:layout_constraintTop_toTopOf="@id/tripActionBtn"
+            app:layout_constraintStart_toStartOf="@id/tripActionBtn"
+            app:layout_constraintEnd_toEndOf="@id/tripActionBtn"
+            app:layout_constraintBottom_toBottomOf="@id/tripActionBtn"
+            android:visibility="@{mViewModel.isLoading ? View.VISIBLE : View.GONE}"
+            android:elevation="2dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </layout>
