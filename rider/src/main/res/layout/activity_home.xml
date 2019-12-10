@@ -116,6 +116,34 @@
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:tripState="@{mViewModel.tripUiState}"
+            app:showWhenTrip="@{TripStateUtil.conditionsFrom(TripStateTripStarted.INSTANCE)}"
+            android:layout_height="wrap_content">
+            <LinearLayout
+
+                android:padding="8dp"
+                android:layout_width="match_parent"
+                android:orientation="vertical"
+                android:layout_height="match_parent">
+                <TextView
+                    android:textAlignment="center"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Driver Info"
+                    />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@{`Email: ` + mViewModel.tripDriver.email}"
+                    />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:tripState="@{mViewModel.tripUiState}"
             app:showWhenTrip="@{TripStateUtil.conditionsFrom(TripStateShowCost.INSTANCE)}"

@@ -4,12 +4,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.maps.model.LatLng
 import com.starbugs.wasalni_core.data.holder.NetworkState
+import com.starbugs.wasalni_core.data.holder.TripStateHolder
 import com.starbugs.wasalni_core.data.holder.TripStateLiveData
 import com.starbugs.wasalni_core.data.model.TripEstimiatedInfo
 import com.starbugs.wasalni_core.data.model.TripRequest
+import com.starbugs.wasalni_core.data.model.User
 import com.starbugs.wasalni_core.data.repository.TripRepository
 import com.starbugs.wasalni_core.ui.BaseViewModel
 import com.starbugs.wasalni_core.util.ext.schedule
+
 
 
 class HomeViewModel(private val tripRepository: TripRepository) : BaseViewModel() {
@@ -23,6 +26,30 @@ class HomeViewModel(private val tripRepository: TripRepository) : BaseViewModel(
     val isLoading = MutableLiveData<Boolean>(false)
 
     val tripEstimatedInfo = MutableLiveData<TripEstimiatedInfo>()
+
+    val tripDriver = MutableLiveData<User>()
+
+    init {
+        launch {
+            tripRepository.getTripRequestResponse()
+                .schedule()
+                .subscribe({
+                    if (tripUiState.value is TripStateHolder.FindDriver){
+                        tripDriver.value = it
+                        tripUiState.nextState()
+                        isLoading.value = false
+                    }else{
+                        tripDriver.value = null
+                    }
+                },{
+                    tripDriver.value = null
+                    tripUiState.value = TripStateHolder.Init
+                    isLoading.value = false
+                })
+        }
+
+    }
+
 
     fun driverLocation(): LiveData<LatLng> {
         return launchWithLiveData { liveData ->

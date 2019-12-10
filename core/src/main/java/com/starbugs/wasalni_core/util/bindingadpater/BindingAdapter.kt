@@ -22,3 +22,8 @@ fun <T> View.hideWhenLoading( state: MutableLiveData<NetworkState<T>>) {
         else -> View.VISIBLE
     }
 }
+
+@BindingAdapter("app:disableWhenLoading")
+fun <T> View.disableWhenLoading( state: MutableLiveData<NetworkState<T>>) {
+   isEnabled = state.value !is NetworkState.Loading
+}

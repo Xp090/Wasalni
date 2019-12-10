@@ -1,5 +1,6 @@
 package com.starbugs.wasalni_driver.di
 
+import com.starbugs.wasalni_driver.ui.IncomingRequestViewModel
 import com.starbugs.wasalni_driver.ui.home.HomeViewModel
 import com.starbugs.wasalni_driver.ui.login.LoginViewModel
 import com.starbugs.wasalni_driver.ui.splash.DriverSplashViewModel
@@ -11,4 +12,5 @@ val viewModelModule = module {
     viewModel { DriverSplashViewModel(get()) }
     viewModel { LoginViewModel(get()) }
     viewModel { HomeViewModel(get())}
+    viewModel { IncomingRequestViewModel(get()) }
 }

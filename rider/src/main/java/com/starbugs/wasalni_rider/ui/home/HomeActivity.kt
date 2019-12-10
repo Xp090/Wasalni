@@ -7,6 +7,7 @@ import android.content.ServiceConnection
 import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
+import android.widget.Toast
 import androidx.lifecycle.Observer
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.*
@@ -114,11 +115,24 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
                             }
                         })
                 }
+                is TripStateHolder.ShowCost -> {
+                    trackingService.findDriver(mViewModel.tripRequest.value!!)
+                    mViewModel.isLoading.value = true
+                }
 
             }
             mViewModel.tripUiState.nextState()
 
         }
+
+        mViewModel.tripDriver.observe(this, Observer {
+            if (it == null) {
+                Toast.makeText(this,"No Driver Found",Toast.LENGTH_LONG).show()
+                rxGoogleMap.mapInstance.clear()
+            }else{
+                Toast.makeText(this,"Driver ${it.email} accepted your request",Toast.LENGTH_LONG).show()
+            }
+        })
     }
 
     override fun onStart() {

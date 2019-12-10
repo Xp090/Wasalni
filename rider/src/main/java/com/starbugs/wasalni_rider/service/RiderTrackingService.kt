@@ -14,8 +14,10 @@ import com.starbugs.wasalni_rider.ui.home.HomeActivity
 import org.koin.android.ext.android.inject
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
+import com.starbugs.wasalni_core.data.model.TripRequest
 import com.starbugs.wasalni_core.data.repository.UserRepository
 import com.starbugs.wasalni_core.service.BaseTrackingService
+import com.starbugs.wasalni_core.util.ext.schedule
 import timber.log.Timber
 
 
@@ -28,8 +30,19 @@ class RiderTrackingService : BaseTrackingService() {
     override val notificationBody: Int
         get() = R.string.tracking_your_location
     override val notificationIcon: Int
-        get() =  R.mipmap.ic_launcher
+        get() =  R.mipmap.wasalni_rider_icon
 
+    fun findDriver(tripRequest: TripRequest) {
+       launch {
+           wasalniSocket.findDriver(tripRequest)
+               .schedule()
+               .subscribe({
+
+               },{
+
+               })
+       }
+    }
 
    inner class LocalBinder : BaseTrackingService.LocalBinder() {
         override val service: BaseTrackingService

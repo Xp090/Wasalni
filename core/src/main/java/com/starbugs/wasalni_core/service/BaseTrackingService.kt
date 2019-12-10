@@ -14,22 +14,25 @@ import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 import com.starbugs.wasalni_core.data.repository.TripRepository
 import com.starbugs.wasalni_core.data.repository.UserRepository
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 import timber.log.Timber
 
 
 abstract class BaseTrackingService : Service() {
 
+    private val disposables = CompositeDisposable()
 
-    private var currentLocation = LatLng(0.0,0.0)
+    protected var currentLocation = LatLng(0.0,0.0)
 
-    private val wasalniSocket: WasalniSocket by inject()
-    private val userRepository: UserRepository by inject()
-    private val tripRepository: TripRepository by inject()
+    protected val wasalniSocket: WasalniSocket by inject()
+    protected val userRepository: UserRepository by inject()
+    protected val tripRepository: TripRepository by inject()
 
     protected abstract val binder :LocalBinder
-    private lateinit var mGoogleApiClient: GoogleApiClient
-    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
-    private lateinit var locationCallback: LocationCallback
+    protected lateinit var mGoogleApiClient: GoogleApiClient
+    protected lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+    protected lateinit var locationCallback: LocationCallback
 
     protected abstract val notificationActivity: Class<*>
     protected abstract val notificationTitle:Int
@@ -110,9 +113,13 @@ abstract class BaseTrackingService : Service() {
 
     override fun onDestroy() {
         wasalniSocket.disconnectSocket()
+        disposables.clear()
         super.onDestroy()
     }
 
+    protected fun launch(job: () -> Disposable) {
+        disposables.add(job())
+    }
 
     abstract inner class LocalBinder : Binder() {
        abstract val service: BaseTrackingService

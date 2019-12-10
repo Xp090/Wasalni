@@ -2,4 +2,7 @@
     <string name="app_name">Wasalni driver</string>
     <string name="login">Login</string>
     <string name="tracking_your_location">Tracking your location</string>
+    <string name="ride_request_from">Ride Request From</string>
+    <string name="accept">Accept</string>
+    <string name="decline">Decline</string>
 </resources>

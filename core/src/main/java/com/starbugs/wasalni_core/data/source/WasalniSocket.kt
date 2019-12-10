@@ -5,14 +5,18 @@ import com.starbugs.wasalni_core.BuildConfig
 import io.socket.client.IO
 import io.socket.client.Socket
 import com.squareup.moshi.Moshi
+import com.starbugs.wasalni_core.data.model.TripRequest
 import com.starbugs.wasalni_core.data.model.User
 import com.starbugs.wasalni_core.util.exception.SocketErrorExcpetion
 import io.reactivex.Observable
 import io.reactivex.subjects.BehaviorSubject
+import io.reactivex.subjects.PublishSubject
 import io.reactivex.subjects.Subject
 import okhttp3.OkHttpClient
 import org.json.JSONObject
+import timber.log.Timber
 import java.lang.RuntimeException
+import java.sql.Driver
 
 
 class WasalniSocket(private val moshi: Moshi, private val okHttpClient: OkHttpClient) {
@@ -20,6 +24,8 @@ class WasalniSocket(private val moshi: Moshi, private val okHttpClient: OkHttpCl
 
     val driverLocationSubject: BehaviorSubject<LatLng> = BehaviorSubject.create()
     val findDriverSubject: BehaviorSubject<User> = BehaviorSubject.create()
+    val tripRequestResponseSubject: BehaviorSubject<User> = BehaviorSubject.create()
+    val incomingTripsRequests: BehaviorSubject<TripRequest> = BehaviorSubject.create()
 
 
     fun initSocket(userId: String) {
@@ -46,8 +52,15 @@ class WasalniSocket(private val moshi: Moshi, private val okHttpClient: OkHttpCl
     fun listenDriverLocation() {
         pipeToSubject(SocketEvent.DriverLocation,driverLocationSubject)
     }
-    fun findDriver(){
-        sendEvent(SocketEvent.FindDriverRequest)
+    fun findDriver(tripRequest: TripRequest): Subject<User> {
+        sendEventObject(SocketEvent.FindDriverRequestFromRider,tripRequest)
+      return pipeToSubject(SocketEvent.FindDriverResponseToRider,tripRequestResponseSubject)
+    }
+    fun listenToIncomingRequests(): Subject<TripRequest> {
+        return pipeToSubject(SocketEvent.FindDriverRequestToDriver,incomingTripsRequests)
+    }
+    fun respondToIncomingRequest(tripRequest: TripRequest){
+        sendEventObject(SocketEvent.FindDriverResponseFromDriver,tripRequest)
     }
 
     private fun sendEvent(eventName: String, vararg args: Any) {
@@ -64,16 +77,17 @@ class WasalniSocket(private val moshi: Moshi, private val okHttpClient: OkHttpCl
         socket.on(eventName){
             val input = it[0]
             try {
-                val jsonAdapter = moshi.adapter<T>(T::class.java).failOnUnknown()
+                if (input is String) {
+                    subject.onError(SocketErrorExcpetion(input))
+                    return@on
+                }
+                val jsonAdapter = moshi.adapter<T>(T::class.java)
                 val jsonObject = input as JSONObject
                 val data:T? = jsonAdapter.fromJson(jsonObject.toString())
                 subject.onNext(data!!)
             } catch (ex: Exception) {
-                if (input is String){
-                    subject.onError(SocketErrorExcpetion(input))
-                }else{
+                    Timber.e(ex)
                     subject.onError(RuntimeException())
-                }
             }
 
         }
@@ -86,8 +100,10 @@ object SocketEvent {
     const val InitUser = "init_user"
     const val UpdateLocation = "UpdateLocation"
     const val DriverLocation = "DriverLocation"
-    const val FindDriverRequest = "FindDriverRequest"
-    const val FindDriverResponse ="FindDriverResponse"
+    const val FindDriverRequestFromRider = "FindDriverRequestFromRider"
+    const val FindDriverRequestToDriver = "FindDriverRequestToDriver"
+    const val FindDriverResponseFromDriver = "FindDriverResponseFromDriver"
+    const val FindDriverResponseToRider = "FindDriverResponseToRider"
 }
 
 

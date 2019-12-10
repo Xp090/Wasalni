@@ -16,13 +16,18 @@ import timber.log.Timber
 import java.util.concurrent.TimeUnit
 
 
-class TripRepository (private val wasalniSocket: WasalniSocket,
+class TripRepository (val wasalniSocket: WasalniSocket,
                       private val tripApi: WasalniTripApi,
                       private val geocoder: Geocoder) {
 
     val currentLocation = MutableLiveData<LatLng>()
 
     fun getDriverLocation() = wasalniSocket.driverLocationSubject
+
+    fun getTripRequestResponse() = wasalniSocket.tripRequestResponseSubject
+
+    fun getIncomingRequest() = wasalniSocket.incomingTripsRequests
+
 
     fun geocodeLocation(location: LatLng): Single<String> {
         return GeoUtils.geocode(geocoder,location)

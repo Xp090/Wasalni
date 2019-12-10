@@ -6,12 +6,15 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Json
 
 
-class TripRequest(){
+class TripRequest {
     var destinationPoint:LatLng? = null
     var destinationAddress:String? = null
 
     var pickupPoint: LatLng? = null
     var pickupAddress: String? = null
+
+    var driver: User? = null
+    var rider: User? = null
 
 }
 
