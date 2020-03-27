@@ -7,7 +7,7 @@ import androidx.lifecycle.Observer
 import com.starbugs.wasalni_core.data.model.User
 import com.starbugs.wasalni_core.ui.BaseActivity
 import com.starbugs.wasalni_core.data.holder.NetworkState
-import com.starbugs.wasalni_core.data.holder.WasalniPersistenceError
+import com.starbugs.wasalni_core.data.holder.ApplicationPersistenceError
 import com.starbugs.wasalni_rider.R
 import com.starbugs.wasalni_rider.databinding.ActivityRiderSplashBinding
 import com.starbugs.wasalni_rider.ui.home.HomeActivity
@@ -34,7 +34,7 @@ class RiderSplashActivity : BaseActivity<ActivityRiderSplashBinding>() {
                 when (it) {
                     is NetworkState.Success<User> -> startActivity<HomeActivity>()
                     is NetworkState.Failure -> when (it.error) {
-                        is WasalniPersistenceError.UserNotLoggedIn -> startActivity<LoginActivity>()
+                        is ApplicationPersistenceError.UserNotLoggedIn -> startActivity<LoginActivity>()
                     } //todo complaete the condation
                 }
                 finishAffinity()

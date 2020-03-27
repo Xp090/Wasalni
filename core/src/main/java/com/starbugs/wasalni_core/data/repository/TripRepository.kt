@@ -1,32 +1,40 @@
 package com.starbugs.wasalni_core.data.repository
 
-import android.content.Context
 import android.location.Geocoder
 import androidx.lifecycle.MutableLiveData
 import com.google.android.gms.maps.model.LatLng
 import com.starbugs.wasalni_core.data.holder.NetworkState
 import com.starbugs.wasalni_core.data.model.TripEstimiatedInfo
-import com.starbugs.wasalni_core.data.source.WasalniSocket
-import com.starbugs.wasalni_core.data.source.WasalniTripApi
+import com.starbugs.wasalni_core.data.model.TripRequest
+import com.starbugs.wasalni_core.data.model.User
+import com.starbugs.wasalni_core.data.source.SocketConnection
+import com.starbugs.wasalni_core.data.source.TripApi
 import com.starbugs.wasalni_core.util.GeoUtils
 import com.starbugs.wasalni_core.util.ext.mapToNetworkState
-import io.reactivex.Observable
 import io.reactivex.Single
-import timber.log.Timber
-import java.util.concurrent.TimeUnit
 
 
-class TripRepository (val wasalniSocket: WasalniSocket,
-                      private val tripApi: WasalniTripApi,
+abstract class TripRepository (val socketConnection: SocketConnection,
+                      private val userRepository: UserRepository,
+                      private val tripApi: TripApi,
                       private val geocoder: Geocoder) {
 
     val currentLocation = MutableLiveData<LatLng>()
 
-    fun getDriverLocation() = wasalniSocket.driverLocationSubject
+    fun initSocketConnection() = socketConnection.initSocket(userRepository.userData.value!!.id)
 
-    fun getTripRequestResponse() = wasalniSocket.tripRequestResponseSubject
+    fun updateLocation(latLng: LatLng) {
+        currentLocation.value = latLng
+        socketConnection.updateLocationEvent.emitEvent(latLng)
+    }
 
-    fun getIncomingRequest() = wasalniSocket.incomingTripsRequests
+
+
+//    fun getDriverLocation() = socketConnection.driverLocationSubject
+
+//    fun getTripRequestResponse() = socketConnection.tripRequestResponseSubject
+//
+//    fun getIncomingRequest() = socketConnection.incomingTripsRequests
 
 
     fun geocodeLocation(location: LatLng): Single<String> {
@@ -37,5 +45,13 @@ class TripRepository (val wasalniSocket: WasalniSocket,
       return tripApi.getTripEstimiatedInfo("${origin.latitude},${origin.longitude}","${destination.latitude},${destination.longitude}")
             .mapToNetworkState()
     }
+
+    fun findDriver(request: TripRequest): Single<NetworkState<User>> {
+      return socketConnection.findDriverRequestEvent
+            .emitEventObjectThenListen(request,true)
+            .firstOrError()
+
+    }
+    fun disconnectSocket() = socketConnection.disconnectSocket()
 
 }

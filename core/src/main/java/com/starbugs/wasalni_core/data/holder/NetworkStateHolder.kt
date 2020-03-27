@@ -5,9 +5,30 @@ import com.starbugs.wasalni_core.util.extra.ResponseErrorParser
 import timber.log.Timber
 
 sealed class NetworkState<T> {
+
+    fun success(): T? {
+        return when (this) {
+            is Success -> data
+            else -> null
+        }
+    }
+    fun failure(): ApplicationError? {
+        return when (this) {
+            is Failure -> error
+            else -> null
+        }
+    }
+
+    fun loading(): Boolean {
+        return when (this) {
+            is Loading -> true
+            else -> false
+        }
+    }
+
     class Initial<T> : NetworkState<T>()
     class Loading<T> : NetworkState<T>()
-    data class Failure<T>( val error: WasalniError) : NetworkState<T>()
+    data class Failure<T>(val error: ApplicationError) : NetworkState<T>()
     data class Success<T>(val data: T) : NetworkState<T>()
 
     companion object {
@@ -20,36 +41,38 @@ sealed class NetworkState<T> {
 }
 
 
-sealed class WasalniError {
+sealed class ApplicationError {
     val localizedMessage by lazy {
-        val errorStringId = this::class.annotations
-            .find { annotation -> annotation is ErrorStringId }
-            ?.let { errorStringId -> (errorStringId as ErrorStringId).stringIdName}
-        if (errorStringId != null) {
-            return@lazy ResponseErrorParser().getLocalizedMessage(errorStringId)
-        }else{
-            Timber.w("Class: ${this::class.simpleName} has no ErrorStringId annotation ")
-            return@lazy this::class.simpleName
-        }
+        ResponseErrorParser().getLocalizedMessage(stringId)
     }
+
+    var stringId: String = "unknown_error"
+
     @ErrorStringId("unknown_error")
-    object UnknownError : WasalniError()
+    object UnknownError : ApplicationError()
 
 }
 
-sealed class WasalniHttpError : WasalniError() {
+sealed class ApplicationHttpError : ApplicationError() {
 
     @ErrorStringId("wrong_username_or_password")
-    object WrongUserNameOrPassword : WasalniHttpError()
+    object WrongUserNameOrPassword : ApplicationHttpError()
 
 }
 
-sealed class WasalniNetworkError : WasalniError() {
+sealed class ApplicationSocketError : ApplicationError() {
+
+    @ErrorStringId("no_driver_found")
+    object NoDriverFound : ApplicationSocketError()
+
+}
+
+sealed class ApplicationNetworkError : ApplicationError() {
     @ErrorStringId("network_error")
-    object NetworkError : WasalniNetworkError()
+    object NetworkError : ApplicationNetworkError()
 }
 
-sealed class WasalniPersistenceError : WasalniError() {
+sealed class ApplicationPersistenceError : ApplicationError() {
 
-    object UserNotLoggedIn : WasalniPersistenceError()
+    object UserNotLoggedIn : ApplicationPersistenceError()
 }

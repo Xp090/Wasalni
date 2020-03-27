@@ -16,5 +16,7 @@
     <string name="find_driver">Find Driver</string>
     <string name="cancel">Cancel</string>
     <string name="trip_started">Trip Started</string>
+    <string name="no_driver_found">No Driver Found</string>
+
 
 </resources>

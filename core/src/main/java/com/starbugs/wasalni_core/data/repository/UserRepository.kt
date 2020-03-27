@@ -4,7 +4,7 @@ import androidx.lifecycle.MutableLiveData
 import com.starbugs.wasalni_core.data.model.User
 import com.starbugs.wasalni_core.data.source.WasalniUserApi
 import com.starbugs.wasalni_core.data.holder.NetworkState
-import com.starbugs.wasalni_core.data.holder.WasalniPersistenceError
+import com.starbugs.wasalni_core.data.holder.ApplicationPersistenceError
 import com.starbugs.wasalni_core.util.ext.mapToNetworkState
 import io.reactivex.Single
 
@@ -33,7 +33,7 @@ class UserRepository (private val userApi: WasalniUserApi,
         }else {
             Single.just(
                 NetworkState.Failure(
-                    WasalniPersistenceError.UserNotLoggedIn))
+                    ApplicationPersistenceError.UserNotLoggedIn))
         }
 
     }

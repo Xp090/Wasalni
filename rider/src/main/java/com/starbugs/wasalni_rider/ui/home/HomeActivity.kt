@@ -116,7 +116,7 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
                         })
                 }
                 is TripStateHolder.ShowCost -> {
-                    trackingService.findDriver(mViewModel.tripRequest.value!!)
+                    mViewModel.findDriver(mViewModel.tripRequest.value!!)
                     mViewModel.isLoading.value = true
                 }
 
@@ -125,12 +125,17 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
 
         }
 
-        mViewModel.tripDriver.observe(this, Observer {
-            if (it == null) {
-                Toast.makeText(this,"No Driver Found",Toast.LENGTH_LONG).show()
-                rxGoogleMap.mapInstance.clear()
-            }else{
-                Toast.makeText(this,"Driver ${it.email} accepted your request",Toast.LENGTH_LONG).show()
+        mViewModel.tripDriver.observe(this, Observer {state ->
+            state?.let {
+                when (it) {
+                    is NetworkState.Success -> {
+                        Toast.makeText(this,"Driver ${it.data.email} accepted your request",Toast.LENGTH_LONG).show()
+                    }
+                    is NetworkState.Failure -> {
+                        Toast.makeText(this,it.error.localizedMessage,Toast.LENGTH_LONG).show()
+                        rxGoogleMap.mapInstance.clear()
+                    }
+                }
             }
         })
     }

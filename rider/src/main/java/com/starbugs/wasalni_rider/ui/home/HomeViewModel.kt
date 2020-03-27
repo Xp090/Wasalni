@@ -12,10 +12,12 @@ import com.starbugs.wasalni_core.data.model.User
 import com.starbugs.wasalni_core.data.repository.TripRepository
 import com.starbugs.wasalni_core.ui.BaseViewModel
 import com.starbugs.wasalni_core.util.ext.schedule
+import com.starbugs.wasalni_core.util.ext.subscribeWithParsedError
+import com.starbugs.wasalni_core.util.livedata.StateLiveData
+import com.starbugs.wasalni_driver.data.repository.RiderTripRepository
 
 
-
-class HomeViewModel(private val tripRepository: TripRepository) : BaseViewModel() {
+class HomeViewModel(private val tripRepository: RiderTripRepository) : BaseViewModel() {
 
     val tripUiState = TripStateLiveData()
 
@@ -27,39 +29,7 @@ class HomeViewModel(private val tripRepository: TripRepository) : BaseViewModel(
 
     val tripEstimatedInfo = MutableLiveData<TripEstimiatedInfo>()
 
-    val tripDriver = MutableLiveData<User>()
-
-    init {
-        launch {
-            tripRepository.getTripRequestResponse()
-                .schedule()
-                .subscribe({
-                    if (tripUiState.value is TripStateHolder.FindDriver){
-                        tripDriver.value = it
-                        tripUiState.nextState()
-                        isLoading.value = false
-                    }else{
-                        tripDriver.value = null
-                    }
-                },{
-                    tripDriver.value = null
-                    tripUiState.value = TripStateHolder.Init
-                    isLoading.value = false
-                })
-        }
-
-    }
-
-
-    fun driverLocation(): LiveData<LatLng> {
-        return launchWithLiveData { liveData ->
-            tripRepository.getDriverLocation()
-                .schedule()
-                .subscribe { data ->
-                    liveData.value = data
-                }
-        }
-    }
+    val tripDriver = StateLiveData<User>()
 
 
     fun geocodeAddress(location: LatLng): LiveData<String> {
@@ -87,5 +57,28 @@ class HomeViewModel(private val tripRepository: TripRepository) : BaseViewModel(
         }
 
 
+    }
+
+    fun findDriver(request: TripRequest){
+        launch {
+            tripRepository.findDriver(request)
+                .subscribeWithParsedError(tripDriver){
+                    when (it) {
+                        is NetworkState.Success -> {
+                            if (tripUiState.value is TripStateHolder.FindDriver){
+                                tripUiState.nextState()
+                                isLoading.value = false
+                            }else {
+                                tripDriver.value = null
+                            }
+                        }
+                        is NetworkState.Failure -> {
+                            tripUiState.value = TripStateHolder.Init
+                            isLoading.value = false
+                            tripDriver.value = null
+                        }
+                    }
+                }
+        }
     }
 }

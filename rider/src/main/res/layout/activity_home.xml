@@ -7,6 +7,7 @@
         <import type="android.view.View"/>
         <import type="com.starbugs.wasalni_core.data.holder.TripStateUtil"/>
 
+
         <variable name="TripStateInit"
             type="com.starbugs.wasalni_core.data.holder.TripStateHolder.Init"/>
         <variable name="TripStateSelectDestination"
@@ -138,7 +139,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@{`Email: ` + mViewModel.tripDriver.email}"
+                    android:text="@{`Email: ` +  mViewModel.tripDriver.success().email}"
                     />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
@@ -196,7 +197,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             tools:text="Request"
-            android:enabled="@{!mViewModel.isLoading}"
             app:tripActionButtonText="@{mViewModel.tripUiState}"
             app:layout_constraintBottom_toBottomOf="@+id/map"
             app:layout_constraintEnd_toEndOf="parent"

@@ -8,8 +8,8 @@ import com.starbugs.wasalni_core.data.repository.CredentialsRepository
 import com.starbugs.wasalni_core.data.repository.TripRepository
 import com.starbugs.wasalni_core.data.repository.UserRepository
 import com.starbugs.wasalni_core.data.source.SharedPreferenceSource
-import com.starbugs.wasalni_core.data.source.WasalniSocket
-import com.starbugs.wasalni_core.data.source.WasalniTripApi
+import com.starbugs.wasalni_core.data.source.SocketConnection
+import com.starbugs.wasalni_core.data.source.TripApi
 import com.starbugs.wasalni_core.data.source.WasalniUserApi
 import com.starbugs.wasalni_core.util.WasalniInterceptor
 import io.reactivex.schedulers.Schedulers
@@ -28,14 +28,12 @@ val repositoryModule = module {
     single { createOkHttpClient(get()) }
     single { createRetrofit(get()) }
     single { createWebService<WasalniUserApi>(get()) }
-    single { createWebService<WasalniTripApi>(get()) }
+    single { createWebService<TripApi>(get()) }
 
     single { WasalniInterceptor(get()) }
     single { Geocoder(androidContext()) }
     single { Moshi.Builder().build() }
-    single { WasalniSocket(get(), get()) }
-    single { TripRepository(get(), get(), get()) }
-
+    single { SocketConnection(get(), get()) }
 
 
     single { SharedPreferenceSource(androidContext()) }

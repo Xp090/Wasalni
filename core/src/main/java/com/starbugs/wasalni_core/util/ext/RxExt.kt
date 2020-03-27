@@ -5,6 +5,7 @@ package com.starbugs.wasalni_core.util.ext
 
 import androidx.lifecycle.MutableLiveData
 import com.starbugs.wasalni_core.data.holder.NetworkState
+import com.starbugs.wasalni_core.util.livedata.StateLiveData
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -28,22 +29,37 @@ fun <T> Subject<T>.schedule(): Observable<T> =
 fun <T> Observable<T>.schedule(): Observable<T> =
     subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread())
 
-fun <T> Single<T>.mapToNetworkState (): Single<NetworkState<T>> = map { NetworkState.Success(it) }
+fun <T> Single<T>.mapToNetworkState(): Single<NetworkState<T>> = map { NetworkState.Success(it) }
 
-fun <T> Subject<T>.mapToNetworkState (): Observable<NetworkState<T>> = map { NetworkState.Success(it) }
+fun <T> Subject<T>.mapToNetworkState(): Observable<NetworkState<T>> =
+    map { NetworkState.Success(it) }
 
-fun <T> Single<NetworkState<T>>.subscribeWithParsedError(liveData: MutableLiveData<NetworkState<T>>): Disposable {
+fun <T> Single<NetworkState<T>>.subscribeWithParsedError(
+    liveData: MutableLiveData<NetworkState<T>>,
+    then: (NetworkState<T>) -> Unit = {}
+): Disposable {
     return schedule().subscribe({
         liveData.value = it
+        then(it)
     }, {
-        liveData.value = NetworkState.failureFromThrowable(it)
+        val networkStateError = NetworkState.failureFromThrowable<T>(it)
+        liveData.value = networkStateError
+        then(networkStateError)
     })
 }
 
-fun <T> Subject<NetworkState<T>>.subscribeWithParsedError(liveData: MutableLiveData<NetworkState<T>>): Disposable {
+
+fun <T> Subject<NetworkState<T>>.subscribeWithParsedError(
+    liveData: StateLiveData<T>,
+    then: (NetworkState<T>) -> Unit = {}
+): Disposable {
     return schedule().subscribe({
         liveData.value = it
+        then(it)
     }, {
-        liveData.value = NetworkState.failureFromThrowable(it)
+        val networkStateError = NetworkState.failureFromThrowable<T>(it)
+        liveData.value = networkStateError
+        then(networkStateError)
     })
 }
+

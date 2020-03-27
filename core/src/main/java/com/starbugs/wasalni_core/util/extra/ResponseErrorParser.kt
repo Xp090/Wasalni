@@ -2,16 +2,19 @@ package com.starbugs.wasalni_core.util.extra
 
 import android.content.Context
 import com.starbugs.wasalni_core.R
-import com.starbugs.wasalni_core.data.holder.WasalniHttpError
-import com.starbugs.wasalni_core.data.holder.WasalniNetworkError
-import com.starbugs.wasalni_core.data.holder.WasalniError
+import com.starbugs.wasalni_core.data.holder.ApplicationHttpError
+import com.starbugs.wasalni_core.data.holder.ApplicationNetworkError
+import com.starbugs.wasalni_core.data.holder.ApplicationError
+import com.starbugs.wasalni_core.data.holder.ApplicationSocketError
 import com.starbugs.wasalni_core.util.annotation.ErrorStringId
-import com.starbugs.wasalni_core.util.exception.SocketErrorExcpetion
+import com.starbugs.wasalni_core.util.exception.SocketErrorException
+import io.reactivex.Notification
 import org.koin.core.KoinComponent
 import org.koin.core.get
 import retrofit2.HttpException
 import timber.log.Timber
 import java.io.IOException
+import kotlin.reflect.KClass
 
 
 class ResponseErrorParser : KoinComponent {
@@ -27,24 +30,24 @@ class ResponseErrorParser : KoinComponent {
     }
 
     companion object {
-        fun parse(throwable: Throwable): WasalniError {
+        fun parse(throwable: Throwable): ApplicationError {
             return when (throwable) {
                 is HttpException -> {
                     val errorResponse = throwable.response()?.errorBody()?.string()
-                    getNetworkError(errorResponse)
+                    findErrorClass(ApplicationHttpError::class,errorResponse)
                 }
-                is SocketErrorExcpetion ->{
-                    getNetworkError(throwable.errorStringId)
+                is SocketErrorException ->{
+                    findErrorClass(ApplicationSocketError::class, throwable.errorStringId)
                 }
-                is IOException -> WasalniNetworkError.NetworkError
+                is IOException -> ApplicationNetworkError.NetworkError
 
-                else ->  WasalniError.UnknownError
+                else ->  ApplicationError.UnknownError
             }
 
         }
 
-         private fun getNetworkError(errorResponse: String?): WasalniError {
-            val errorClass = WasalniHttpError::class.nestedClasses
+         private fun <T: ApplicationError> findErrorClass(errorTypeClass: KClass<T>, errorResponse: String?): ApplicationError {
+            val errorClass = errorTypeClass.nestedClasses
                 .find { klass ->
                     klass.annotations.any { annotation ->
                         when (annotation) {
@@ -53,8 +56,8 @@ class ResponseErrorParser : KoinComponent {
                         }
                     }
                 }
-            errorClass?.let { return (it.objectInstance as WasalniError?)!! }
-            return WasalniError.UnknownError
+            return ((errorClass?.objectInstance ?:  ApplicationError.UnknownError) as ApplicationError)
+                .apply { errorResponse?.let { stringId = it } }
         }
 
     }

@@ -8,26 +8,21 @@ import android.location.Location
 import android.os.*
 import androidx.core.app.NotificationCompat
 import com.google.android.gms.common.api.GoogleApiClient
-import com.starbugs.wasalni_core.data.source.WasalniSocket
 import org.koin.android.ext.android.inject
 import com.google.android.gms.location.*
 import com.google.android.gms.maps.model.LatLng
 import com.starbugs.wasalni_core.data.repository.TripRepository
-import com.starbugs.wasalni_core.data.repository.UserRepository
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.disposables.Disposable
 import timber.log.Timber
 
 
-abstract class BaseTrackingService : Service() {
+abstract class BaseTrackingService<TR: TripRepository> : Service() {
 
     private val disposables = CompositeDisposable()
 
-    protected var currentLocation = LatLng(0.0,0.0)
 
-    protected val wasalniSocket: WasalniSocket by inject()
-    protected val userRepository: UserRepository by inject()
-    protected val tripRepository: TripRepository by inject()
+    protected abstract val tripRepository: TR
 
     protected abstract val binder :LocalBinder
     protected lateinit var mGoogleApiClient: GoogleApiClient
@@ -38,12 +33,6 @@ abstract class BaseTrackingService : Service() {
     protected abstract val notificationTitle:Int
     protected abstract val notificationBody:Int
     protected abstract val notificationIcon:Int
-
-
-
-    fun listenDriverLocation(){
-        wasalniSocket.listenDriverLocation()
-    }
 
 
 
@@ -71,16 +60,14 @@ abstract class BaseTrackingService : Service() {
             locationCallback,
             Looper.getMainLooper())
 
-        wasalniSocket.initSocket(userRepository.userData.value!!.id)
+        tripRepository.initSocketConnection()
     }
 
 
     private fun onLocationChange(location: Location) {
         Timber.w(location.latitude.toString())
         Timber.w(location.longitude.toString())
-        currentLocation = LatLng(location.latitude, location.longitude)
-        tripRepository.currentLocation.postValue(currentLocation)
-        wasalniSocket.updateLocation(currentLocation)
+        tripRepository.currentLocation.value = LatLng(location.latitude, location.longitude)
 
     }
 
@@ -112,7 +99,7 @@ abstract class BaseTrackingService : Service() {
     }
 
     override fun onDestroy() {
-        wasalniSocket.disconnectSocket()
+        tripRepository.disconnectSocket()
         disposables.clear()
         super.onDestroy()
     }
@@ -122,8 +109,9 @@ abstract class BaseTrackingService : Service() {
     }
 
     abstract inner class LocalBinder : Binder() {
-       abstract val service: BaseTrackingService
+       abstract val service: BaseTrackingService<TR>
     }
+
 
     companion object {
         const val NOTIFICATION_ID = 1

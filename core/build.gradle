@@ -20,14 +20,14 @@ android {
     buildTypes {
 
         debug {
-            buildConfigField 'String', 'BASE_URL', '"http://35.190.186.85:3000"'
-            resValue "string", "google_maps_api_key", "AIzaSyDwVHJRnhr0JpQvFj_nLzyHAK8aED02HzQ"
+            buildConfigField 'String', 'BASE_URL', '"http://192.168.1.90:3000"'
+            resValue "string", "google_maps_api_key", "AIzaSyDwXvZuHnUq3PoRHFXYFSECMxFWmMstwW8"
         }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             buildConfigField 'String', 'BASE_URL', '"http://localhost:3000"'
-            resValue "string", "google_maps_api_key", "AIzaSyDwVHJRnhr0JpQvFj_nLzyHAK8aED02HzQ"
+            resValue "string", "google_maps_api_key", "AIzaSyDwXvZuHnUq3PoRHFXYFSECMxFWmMstwW8"
         }
     }
 }
@@ -53,6 +53,7 @@ dependencies {
     //rxjava
     implementation 'io.reactivex.rxjava2:rxjava:2.2.10'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation "io.reactivex.rxjava2:rxkotlin:2.4.0"
 
     implementation 'com.karumi:dexter:5.0.0'
 
