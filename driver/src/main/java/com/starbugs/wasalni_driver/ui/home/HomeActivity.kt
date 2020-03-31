@@ -41,7 +41,6 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mViewModel.connect()
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as RxMapsFragment?
         mapFragment!!.getRxMapAsync(this)

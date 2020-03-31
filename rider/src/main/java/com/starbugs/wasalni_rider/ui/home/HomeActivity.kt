@@ -119,7 +119,11 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
                     mViewModel.findDriver(mViewModel.tripRequest.value!!)
                     mViewModel.isLoading.value = true
                 }
-
+                is TripStateHolder.FindDriver -> {
+                    mViewModel.tripUiState.preivousState();
+                    mViewModel.isLoading.value = false
+                    return@setOnClickListener
+                }
             }
             mViewModel.tripUiState.nextState()
 
@@ -130,9 +134,11 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
                 when (it) {
                     is NetworkState.Success -> {
                         Toast.makeText(this,"Driver ${it.data.email} accepted your request",Toast.LENGTH_LONG).show()
+                        Timber.i("DRIVER: ${it.data.email}")
                     }
                     is NetworkState.Failure -> {
                         Toast.makeText(this,it.error.localizedMessage,Toast.LENGTH_LONG).show()
+                        Timber.i("DRIVER: ${it.error.localizedMessage}")
                         rxGoogleMap.mapInstance.clear()
                     }
                 }
@@ -150,13 +156,15 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
                             finish()
                             finishAffinity()
                         } else {
-                            val trackingServiceIntent =
-                                Intent(this@HomeActivity, RiderTrackingService::class.java)
-                            bindService(
-                                trackingServiceIntent,
-                                this@HomeActivity,
-                                Context.BIND_AUTO_CREATE or Context.BIND_ABOVE_CLIENT
-                            )
+                            if (!::trackingService.isInitialized) {
+                                val trackingServiceIntent =
+                                    Intent(this@HomeActivity, RiderTrackingService::class.java)
+                                bindService(
+                                    trackingServiceIntent,
+                                    this@HomeActivity,
+                                    Context.BIND_AUTO_CREATE or Context.BIND_ABOVE_CLIENT
+                                )
+                            }
                         }
                     }
                 }
@@ -165,7 +173,7 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
 
     override fun onStop() {
         super.onStop()
-        unbindService(this)
+      //  unbindService(this)
     }
 
 

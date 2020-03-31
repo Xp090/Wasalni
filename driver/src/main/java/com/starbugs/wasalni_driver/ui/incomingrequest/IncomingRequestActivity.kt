@@ -1,4 +1,4 @@
-package com.starbugs.wasalni_driver.ui
+package com.starbugs.wasalni_driver.ui.incomingrequest
 
 
 import android.os.Bundle
@@ -8,7 +8,6 @@ import com.starbugs.wasalni_driver.databinding.ActivityIncomingRequestBinding
 import com.starbugs.wasalni_driver.ui.home.HomeActivity
 import org.jetbrains.anko.intentFor
 import org.jetbrains.anko.singleTop
-import org.jetbrains.anko.startActivity
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
 

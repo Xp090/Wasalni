@@ -21,11 +21,11 @@ abstract class TripRepository (val socketConnection: SocketConnection,
 
     val currentLocation = MutableLiveData<LatLng>()
 
-    fun initSocketConnection() = socketConnection.initSocket(userRepository.userData.value!!.id)
+    fun initSocketConnection(onConnected: () -> Unit) = socketConnection.initSocket(onConnected)
 
     fun updateLocation(latLng: LatLng) {
         currentLocation.value = latLng
-        socketConnection.updateLocationEvent.emitEvent(latLng)
+        socketConnection.updateLocationEvent.emitEventObject(latLng)
     }
 
 
@@ -47,7 +47,7 @@ abstract class TripRepository (val socketConnection: SocketConnection,
     }
 
     fun findDriver(request: TripRequest): Single<NetworkState<User>> {
-      return socketConnection.findDriverRequestEvent
+      return socketConnection.riderFindDriverRequestEvent
             .emitEventObjectThenListen(request,true)
             .firstOrError()
 

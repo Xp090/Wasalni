@@ -7,7 +7,7 @@
 
         <variable
             name="mViewModel"
-            type="com.starbugs.wasalni_driver.ui.IncomingRequestViewModel" />
+            type="com.starbugs.wasalni_driver.ui.incomingrequest.IncomingRequestViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -30,7 +30,7 @@
             android:id="@+id/riderName"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@{mViewModel.incomingRequestRider.rider.email}"
+            android:text="@{mViewModel.incomingRequestRider.success().rider.email}"
             app:layout_constraintEnd_toEndOf="@+id/rideRequestFrom"
             app:layout_constraintStart_toStartOf="@+id/rideRequestFrom"
             app:layout_constraintTop_toBottomOf="@id/rideRequestFrom"

@@ -19,12 +19,12 @@ class SocketEventFactory(val moshi: Moshi, val socket: Socket) {
         )
     }
 
-    inline fun <reified E, reified L> createListenerWithBehaviorSubject(eventName: String): SocketEventListener<E,L> {
+    inline fun <reified L> createListenerWithBehaviorSubject(eventName: String): SocketEventListener<Nothing,L> {
         return SocketEventListener(
             moshi,
             socket,
             eventName,
-            E::class.java,
+            Nothing::class.java,
             L::class.java,
             BehaviorSubject.create()
         )
@@ -41,12 +41,12 @@ class SocketEventFactory(val moshi: Moshi, val socket: Socket) {
         )
     }
 
-    inline fun <reified L> createEmitterListenerWithBehaviorSubject(eventName: String): SocketEventEmitterListener<Nothing,L> {
+    inline fun <reified E,reified L> createEmitterListenerWithBehaviorSubject(eventName: String): SocketEventEmitterListener<E,L> {
         return SocketEventEmitterListener(
             moshi,
             socket,
             eventName,
-            Nothing::class.java,
+            E::class.java,
             L::class.java,
             BehaviorSubject.create()
         )

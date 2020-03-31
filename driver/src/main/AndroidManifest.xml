@@ -21,7 +21,7 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning,UnusedAttribute">
-        <activity android:name=".ui.IncomingRequestActivity"></activity>
+        <activity android:name=".ui.incomingrequest.IncomingRequestActivity"></activity>
 
         <service
             android:name=".service.DriverTrackingService"

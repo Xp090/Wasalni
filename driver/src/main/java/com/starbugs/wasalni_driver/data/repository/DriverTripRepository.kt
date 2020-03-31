@@ -12,13 +12,35 @@ import com.starbugs.wasalni_core.data.source.SocketConnection
 import com.starbugs.wasalni_core.data.source.TripApi
 import com.starbugs.wasalni_core.util.GeoUtils
 import com.starbugs.wasalni_core.util.ext.mapToNetworkState
+import io.reactivex.Observable
 import io.reactivex.Single
+import io.reactivex.subjects.Subject
 
 
-class DriverTripRepository (socketConnection: SocketConnection,
-                            userRepository: UserRepository,
-                             tripApi: TripApi,
-                             geocoder: Geocoder):TripRepository(socketConnection,userRepository,tripApi,geocoder) {
+class DriverTripRepository(
+    socketConnection: SocketConnection,
+    userRepository: UserRepository,
+    tripApi: TripApi,
+    geocoder: Geocoder
+) : TripRepository(socketConnection, userRepository, tripApi, geocoder) {
 
 
+    val currentTripRequest = MutableLiveData<NetworkState<TripRequest>>(NetworkState.Initial())
+
+
+    fun listenForRiderRequest(): Observable<NetworkState<TripRequest>> {
+        return socketConnection.driverListenForRiderRequestEvent.startListeningAndObserve()
+            .doOnNext { currentTripRequest.postValue(it) }
+    }
+
+    fun acceptRiderRequest() {
+        socketConnection.driverListenForRiderRequestEvent.emitEvent(true)
+        //todo currentTripRequest.value = NetworkState.Loading() +++ then verfiy the request
+    }
+
+    fun declineRiderRequest() {
+        socketConnection.driverListenForRiderRequestEvent.emitEventObject(false)
+        currentTripRequest.value = NetworkState.Initial()
+
+    }
 }

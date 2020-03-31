@@ -1,15 +1,17 @@
 package com.starbugs.wasalni_core.data.source
 
 import com.google.android.gms.maps.model.LatLng
-import com.starbugs.wasalni_core.BuildConfig
-import io.socket.client.IO
-import io.socket.client.Socket
 import com.squareup.moshi.Moshi
+import com.starbugs.wasalni_core.BuildConfig
 import com.starbugs.wasalni_core.data.model.TripRequest
 import com.starbugs.wasalni_core.data.model.User
 import com.starbugs.wasalni_core.util.socket.SocketEvent
 import com.starbugs.wasalni_core.util.socket.SocketEventFactory
+import io.socket.client.Ack
+import io.socket.client.IO
+import io.socket.client.Socket
 import okhttp3.OkHttpClient
+import timber.log.Timber
 
 
 class SocketConnection(private val moshi: Moshi, private val okHttpClient: OkHttpClient) {
@@ -20,31 +22,51 @@ class SocketConnection(private val moshi: Moshi, private val okHttpClient: OkHtt
 //    val tripRequestResponseEvent by lazy { eventFactory.createListenerWithBehaviorSubject<LatLng>(SocketEvent.DriverLocation) }
 //    val incomingTripsRequestsEvent by lazy { eventFactory.createListenerWithBehaviorSubject<LatLng>(SocketEvent.DriverLocation) }
 
-    val findDriverRequestEvent by lazy {
+    val riderFindDriverRequestEvent by lazy {
         eventFactory.createEmitterListenerWithPublishSubject<TripRequest,User>(SocketEvent.RiderFindDriverRequest)
+    }
+    val driverListenForRiderRequestEvent by lazy {
+        eventFactory.createEmitterListenerWithBehaviorSubject<Boolean,TripRequest>(SocketEvent.DriverListenForRiderRequest)
     }
 
     val updateLocationEvent by lazy {eventFactory.createEmitter<LatLng>(SocketEvent.UpdateLocation)}
 
 
-
-    fun initSocket(userId: String) {
-        IO.setDefaultOkHttpCallFactory(okHttpClient)
-        IO.setDefaultOkHttpWebSocketFactory(okHttpClient)
-        socket = IO.socket(BuildConfig.BASE_URL)
+    fun initSocket(onConnected: () -> Unit) {
+        if (!::socket.isInitialized) {
+            IO.setDefaultOkHttpCallFactory(okHttpClient)
+            IO.setDefaultOkHttpWebSocketFactory(okHttpClient)
+            socket = IO.socket(BuildConfig.BASE_URL)
+            socket.on(Socket.EVENT_CONNECT){
+                onConnected()
+                Timber.d("Socket.Io ${socket.id()}")
+            }
+        }
         socket.connect()
-        initUser(userId)
-        eventFactory = SocketEventFactory(moshi,socket)
+
+//        val jsonAdapter = moshi.adapter<LatLng>(LatLng::class.java)
+//        val jsonObject = JSONObject(jsonAdapter.toJson(LatLng(1.0,1.0)))
+//        socket.emit("UpdateLocation",jsonObject)
+//
+//        socket.on("qwer") {
+//            val ack = it[it.size - 1] as Ack
+//            ack.call("hi")
+//            ack.call("hi2")
+//            ack.call("hi3")
+//
+//        }
+
+//        socket.on("back"){
+//            Timber.w(it.toString())
+//        }
+
+        eventFactory = SocketEventFactory(moshi, socket)
     }
 
     fun disconnectSocket() {
         socket.disconnect()
-        socket.off()
     }
 
-   private fun initUser(userId: String) {
-       socket.emit(SocketEvent.InitUser, userId)
-    }
 
 //    fun updateLocation(latLng: LatLng) {
 //        sendEventObject(SocketEvent.UpdateLocation, latLng)

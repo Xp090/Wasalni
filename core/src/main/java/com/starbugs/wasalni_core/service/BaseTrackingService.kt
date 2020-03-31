@@ -56,18 +56,20 @@ abstract class BaseTrackingService<TR: TripRepository> : Service() {
         request.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         request.smallestDisplacement = DISPLACEMENT.toFloat()
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this@BaseTrackingService)
-        fusedLocationProviderClient.requestLocationUpdates(request,
-            locationCallback,
-            Looper.getMainLooper())
 
-        tripRepository.initSocketConnection()
+        tripRepository.initSocketConnection {
+            Timber.d("Socket.Io Connected")
+            fusedLocationProviderClient.requestLocationUpdates(request,
+                locationCallback,
+                Looper.getMainLooper())
+        }
     }
 
 
     private fun onLocationChange(location: Location) {
         Timber.w(location.latitude.toString())
         Timber.w(location.longitude.toString())
-        tripRepository.currentLocation.value = LatLng(location.latitude, location.longitude)
+        tripRepository.updateLocation(LatLng(location.latitude, location.longitude))
 
     }
 
