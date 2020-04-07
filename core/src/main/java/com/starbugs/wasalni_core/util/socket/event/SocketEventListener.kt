@@ -24,20 +24,14 @@ open class SocketEventListener<E,L>(
 
 
 
-   protected fun startListening(
-        eventName: String = this.eventName,
-        listenOnce: Boolean = false
-    ): SocketEventListener<E,L> {
-        stopListening(eventName)
-        socket.on(eventName) {
-            handleIncomingInput(it)
-            if (listenOnce) {
-                stopListening(eventName)
-            }
-
-        }
-        return this
-    }
+//   protected fun startListening(
+//        eventName: String = this.eventName): SocketEventListener<E,L> {
+//        stopListening(eventName)
+//        socket.on(eventName) {
+//            handleIncomingInput(it)
+//        }
+//        return this
+//    }
 
     @Suppress("UNCHECKED_CAST")
     protected open fun handleIncomingInput (inputArgs: Array<Any>) {
@@ -62,6 +56,7 @@ open class SocketEventListener<E,L>(
     fun listen(
         eventName: String = this.eventName
     ): Subject<NetworkState<L>> {
+        stopListening(eventName)
         socket.on(eventName) {
             handleIncomingInput(it)
         }
@@ -71,6 +66,7 @@ open class SocketEventListener<E,L>(
     fun listenOnce(
         eventName: String = this.eventName
     ): Subject<NetworkState<L>> {
+        resetSubject()
         stopListening(eventName)
         socket.once(eventName) {
             handleIncomingInput(it)
@@ -84,9 +80,11 @@ open class SocketEventListener<E,L>(
 
 
     fun resetSubject() {
+        eventSubject.onComplete()
+        if (!eventSubject.hasComplete()) eventSubject.onComplete()
         eventSubject = when (eventSubject) {
-            is BehaviorSubject<NetworkState<L>> -> BehaviorSubject.create<NetworkState<L>>()
-            is PublishSubject<NetworkState<L>> -> PublishSubject.create<NetworkState<L>>()
+            is BehaviorSubject<NetworkState<L>> -> BehaviorSubject.create()
+            is PublishSubject<NetworkState<L>> -> PublishSubject.create()
             else -> throw Exception("Unsupported Subject Type")
         }
     }
@@ -95,7 +93,7 @@ open class SocketEventListener<E,L>(
         if (this::class.simpleName == SocketEventListener::class.simpleName) {
             throw Exception("You Can't emit events from SocketEventListener")
         } else {
-            super.emitEvent(args,null)
+            super.emitEvent(args,ackCallback)
         }
 
     }
@@ -104,7 +102,7 @@ open class SocketEventListener<E,L>(
         if (this::class.simpleName == SocketEventListener::class.simpleName) {
             throw Exception("You Can't emit events from SocketEventListener")
         } else {
-            super.emitEventObject(data, null)
+            super.emitEventObject(data, ackCallback)
         }
     }
 

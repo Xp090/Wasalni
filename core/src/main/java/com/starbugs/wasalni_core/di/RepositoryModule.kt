@@ -5,13 +5,14 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.adapters.Rfc3339DateJsonAdapter
 import com.starbugs.wasalni_core.BuildConfig
 import com.starbugs.wasalni_core.data.repository.CredentialsRepository
-import com.starbugs.wasalni_core.data.repository.TripRepository
 import com.starbugs.wasalni_core.data.repository.UserRepository
 import com.starbugs.wasalni_core.data.source.SharedPreferenceSource
 import com.starbugs.wasalni_core.data.source.SocketConnection
 import com.starbugs.wasalni_core.data.source.TripApi
-import com.starbugs.wasalni_core.data.source.WasalniUserApi
+import com.starbugs.wasalni_core.data.source.UserApi
 import com.starbugs.wasalni_core.util.WasalniInterceptor
+import com.starbugs.wasalni_core.util.retrofit.MoshiConverterFactoryForNetworkState
+import com.starbugs.wasalni_core.util.retrofit.RxCallFactoryForNetworkState
 import io.reactivex.schedulers.Schedulers
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -27,7 +28,7 @@ val repositoryModule = module {
 
     single { createOkHttpClient(get()) }
     single { createRetrofit(get()) }
-    single { createWebService<WasalniUserApi>(get()) }
+    single { createWebService<UserApi>(get()) }
     single { createWebService<TripApi>(get()) }
 
     single { WasalniInterceptor(get()) }
@@ -61,8 +62,8 @@ fun createRetrofit(okHttpClient: OkHttpClient): Retrofit {
     return Retrofit.Builder()
         .baseUrl(BuildConfig.BASE_URL)
         .client(okHttpClient)
-        .addConverterFactory(MoshiConverterFactory.create(moshi))
-        .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
+        .addConverterFactory(MoshiConverterFactoryForNetworkState(moshi))
+        .addCallAdapterFactory(RxCallFactoryForNetworkState())
         .build()
 }
 

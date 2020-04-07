@@ -16,10 +16,11 @@ open class SocketEventEmitterListener<E,L>(
     eventSubject: Subject<NetworkState<L>>
 ): SocketEventListener<E,L>(moshi,socket,eventName,emitValueType,listenValueType,eventSubject) {
 
-    private val defaultCallback: (L) -> Unit = {
+    private val defaultCallback: (E) -> Unit = {
         throw RuntimeException("No Callback Received") //todo change it to not throw later on development
     }
-    var callback: (L) -> Unit = defaultCallback
+    var callback: (E) -> Unit = defaultCallback
+    private set
 
     fun emitEventThenListen(args: E): Subject<NetworkState<L>> {
         emitEvent(args)
@@ -46,12 +47,19 @@ open class SocketEventEmitterListener<E,L>(
     }
 
     override fun handleIncomingInput(inputArgs: Array<Any>) {
-        super.handleIncomingInput(inputArgs)
-        val ackArg = inputArgs[inputArgs.size - 1]
-        callback = if(ackArg is Ack) {
-            { ackArg.call(it) }
+        if (callback == defaultCallback) {
+            super.handleIncomingInput(inputArgs)
+            val ackArg = inputArgs[inputArgs.size - 1]
+            callback = if(ackArg is Ack) {
+                {
+                    ackArg.call(it)
+                    callback = defaultCallback
+                }
+            } else {
+                defaultCallback
+            }
         } else {
-            defaultCallback
+            Timber.w("Socket: Event $eventName has been rejected as the previous callback hasn't been called")
         }
 
     }

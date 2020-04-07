@@ -28,7 +28,6 @@ import com.google.maps.android.PolyUtil
 import com.google.maps.android.SphericalUtil
 import com.starbugs.wasalni_core.data.holder.NetworkState
 import com.starbugs.wasalni_core.data.holder.TripStateHolder
-import com.starbugs.wasalni_core.data.model.TripEstimiatedInfo
 import com.starbugs.wasalni_core.util.ext.observeOnce
 import com.starbugs.wasalni_core.util.ext.setOnPlaceSelectedListener
 import com.starbugs.wasalni_core.util.view.OnRxMapReadyCallback
@@ -71,8 +70,8 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
         destinationPlaceSelect.setCountry("EG")
 
         destinationPlaceSelect.setOnPlaceSelectedListener {
-            mViewModel.tripRequest.value?.destinationAddress = it.address
-            mViewModel.tripRequest.value?.destinationPoint = it.latLng
+            mViewModel.rideRequest.value?.destinationAddress = it.address!!
+            mViewModel.rideRequest.value?.destinationPoint = it.latLng!!
             setDestinationMarker(it.latLng!!)
         }
 
@@ -85,8 +84,8 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
         )
         pickupPlaceSelect.setCountry("EG")
         pickupPlaceSelect.setOnPlaceSelectedListener {
-            mViewModel.tripRequest.value?.pickupAddress = it.address
-            mViewModel.tripRequest.value?.pickupPoint = it.latLng
+            mViewModel.rideRequest.value?.pickupAddress = it.address!!
+            mViewModel.rideRequest.value?.pickupPoint = it.latLng!!
             setPickUpMarker(it.latLng!!)
         }
 
@@ -116,7 +115,7 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
                         })
                 }
                 is TripStateHolder.ShowCost -> {
-                    mViewModel.findDriver(mViewModel.tripRequest.value!!)
+                    mViewModel.findDriver(mViewModel.rideRequest.value!!)
                     mViewModel.isLoading.value = true
                 }
                 is TripStateHolder.FindDriver -> {
@@ -129,12 +128,12 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
 
         }
 
-        mViewModel.tripDriver.observe(this, Observer {state ->
+        mViewModel.trip.observe(this, Observer {state ->
             state?.let {
                 when (it) {
                     is NetworkState.Success -> {
-                        Toast.makeText(this,"Driver ${it.data.email} accepted your request",Toast.LENGTH_LONG).show()
-                        Timber.i("DRIVER: ${it.data.email}")
+                        Toast.makeText(this,"Driver ${it.data.driver.email} accepted your request",Toast.LENGTH_LONG).show()
+                        Timber.i("DRIVER: ${it.data.driver.email}")
                     }
                     is NetworkState.Failure -> {
                         Toast.makeText(this,it.error.localizedMessage,Toast.LENGTH_LONG).show()
@@ -200,16 +199,16 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
             lat.text = it.latitude.toString()
             lng.text = it.longitude.toString()
             if (mViewModel.tripUiState.value is TripStateHolder.SelectDestination) {
-                mViewModel.tripRequest.value?.destinationPoint = it
+                mViewModel.rideRequest.value?.destinationPoint = it
                 mViewModel.geocodeAddress(it).observeOnce(this, Observer {address ->
                     destinationPlaceSelect.setText(address)
-                    mViewModel.tripRequest.value?.destinationAddress = address
+                    mViewModel.rideRequest.value?.destinationAddress = address
                 })
             } else if (mViewModel.tripUiState.value is TripStateHolder.SelectPickUp) {
-                mViewModel.tripRequest.value?.pickupPoint = it
+                mViewModel.rideRequest.value?.pickupPoint = it
                 mViewModel.geocodeAddress(it).observeOnce(this, Observer {address ->
                     pickupPlaceSelect.setText(address)
-                    mViewModel.tripRequest.value?.pickupAddress = address
+                    mViewModel.rideRequest.value?.pickupAddress = address
                 })
             }
 

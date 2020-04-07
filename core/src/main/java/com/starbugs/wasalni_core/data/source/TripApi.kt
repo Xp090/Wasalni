@@ -1,7 +1,7 @@
 package com.starbugs.wasalni_core.data.source
 
-import com.starbugs.wasalni_core.data.model.TripEstimiatedInfo
-import com.starbugs.wasalni_core.data.model.User
+import com.starbugs.wasalni_core.data.holder.NetworkState
+import com.starbugs.wasalni_core.data.model.TripEstimatedInfo
 import io.reactivex.Single
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -9,6 +9,6 @@ import retrofit2.http.Query
 interface TripApi {
 
     @GET("/trip/cost")
-    fun getTripEstimiatedInfo(@Query("origin") origin: String,
-                              @Query("destination") destination: String): Single<TripEstimiatedInfo>
+    fun getTripEstimatedInfo(@Query("origin") origin: String,
+                             @Query("destination") destination: String): Single<NetworkState<TripEstimatedInfo>>
 }

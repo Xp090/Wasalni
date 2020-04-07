@@ -2,7 +2,6 @@ package com.starbugs.wasalni_rider.service
 
 import com.starbugs.wasalni_rider.R
 import com.starbugs.wasalni_rider.ui.home.HomeActivity
-import com.starbugs.wasalni_core.data.model.TripRequest
 import com.starbugs.wasalni_core.service.BaseTrackingService
 import com.starbugs.wasalni_driver.data.repository.RiderTripRepository
 import org.koin.android.ext.android.inject

@@ -20,7 +20,7 @@ open class SocketEventEmitter<E>(
     open fun emitEventObject(data: E, ackCallback: Ack? = null) {
         val jsonAdapter = moshi.adapter(emitValueType)
         val jsonObject = JSONObject(jsonAdapter.toJson(data))
-        socket.emit(eventName, jsonObject)
+        socket.emit(eventName, jsonObject, ackCallback)
     }
 
 
