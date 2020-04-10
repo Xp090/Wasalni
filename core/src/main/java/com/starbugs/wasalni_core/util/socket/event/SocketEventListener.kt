@@ -56,7 +56,8 @@ open class SocketEventListener<E,L>(
     fun listen(
         eventName: String = this.eventName
     ): Subject<NetworkState<L>> {
-        stopListening(eventName)
+   //     stopListening(eventName)
+        Timber.w("Socket.Io: $eventName ${socket.id()}")
         socket.on(eventName) {
             handleIncomingInput(it)
         }
@@ -67,7 +68,7 @@ open class SocketEventListener<E,L>(
         eventName: String = this.eventName
     ): Subject<NetworkState<L>> {
         resetSubject()
-        stopListening(eventName)
+       // stopListening(eventName)
         socket.once(eventName) {
             handleIncomingInput(it)
         }

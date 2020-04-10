@@ -91,6 +91,9 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
 
         binding.tripActionBtn.setOnClickListener {
             when(mViewModel.tripUiState.value){
+                is TripStateHolder.Init -> {
+                    rxGoogleMap.mapInstance.animateCamera(CameraUpdateFactory.newLatLngZoom(mViewModel.currentLocation.value!!,15.0f))
+                }
                 is TripStateHolder.SelectDestination -> {
                     setDestinationMarker(animate = false)
                     rxGoogleMap.mapInstance.animateCamera(CameraUpdateFactory.newLatLngZoom(mViewModel.currentLocation.value!!,15.0f))
@@ -200,16 +203,20 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
             lng.text = it.longitude.toString()
             if (mViewModel.tripUiState.value is TripStateHolder.SelectDestination) {
                 mViewModel.rideRequest.value?.destinationPoint = it
-                mViewModel.geocodeAddress(it).observeOnce(this, Observer {address ->
-                    destinationPlaceSelect.setText(address)
-                    mViewModel.rideRequest.value?.destinationAddress = address
-                })
+                destinationPlaceSelect.setText("Dest Address")
+                mViewModel.rideRequest.value?.destinationAddress = "Dest Address"
+//                mViewModel.geocodeAddress(it).observeOnce(this, Observer {address ->
+//                    destinationPlaceSelect.setText(address)
+//                    mViewModel.rideRequest.value?.destinationAddress = address
+//                })
             } else if (mViewModel.tripUiState.value is TripStateHolder.SelectPickUp) {
                 mViewModel.rideRequest.value?.pickupPoint = it
-                mViewModel.geocodeAddress(it).observeOnce(this, Observer {address ->
-                    pickupPlaceSelect.setText(address)
-                    mViewModel.rideRequest.value?.pickupAddress = address
-                })
+                pickupPlaceSelect.setText("Pickup address")
+                mViewModel.rideRequest.value?.pickupAddress = "Pickup address"
+//                mViewModel.geocodeAddress(it).observeOnce(this, Observer {address ->
+//                    pickupPlaceSelect.setText(address)
+//                    mViewModel.rideRequest.value?.pickupAddress = address
+//                })
             }
 
         }

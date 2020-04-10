@@ -32,7 +32,7 @@ data class SentRideRequest(
     @Json(name = "destinationAddress")
     val destinationAddress: String,
     @Json(name = "driver")
-    val driver: User,
+    val driver: User?,
     @Json(name = "requestStatus")
     val requestStatus: String
 )
@@ -49,10 +49,10 @@ data class Trip(
     @Json(name = "rideRequest")
     val rideRequest: SentRideRequest,
     @Json(name = "tripStatus")
-    val tripStatus: TripStatus
+    val tripStatus: String
 ) {
     val rider: User = rideRequest.rider
-    val driver: User = rideRequest.driver
+    val driver: User = rideRequest.driver!!
     val pickupPoint: LatLng = rideRequest.pickupPoint
     val pickupAddress: String = rideRequest.pickupAddress
     val destinationPoint: LatLng = rideRequest.destinationPoint

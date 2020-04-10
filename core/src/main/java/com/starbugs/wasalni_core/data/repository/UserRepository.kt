@@ -23,10 +23,10 @@ class UserRepository (private val userApi: UserApi,
                 userData.postValue(it.success()?.user)
             }.map {
                 when (it) {
-                    is NetworkState.Success -> NetworkState.Success(it.success()!!.user)
-                    else -> NetworkState.Failure(it.failure()!!)
+                    is NetworkState.Success -> NetworkState.Success<User>(it.success()!!.user)
+                    else -> NetworkState.Failure<User>(it.failure()!!)
                 }
-                
+
             }
     }
 

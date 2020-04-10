@@ -26,6 +26,11 @@ class DriverTrackingService : BaseTrackingService<DriverTripRepository>() {
 
     override fun onCreate() {
         super.onCreate()
+
+    }
+
+    override fun onSocketConnected() {
+        super.onSocketConnected()
         launch {
             tripRepository.listenForRiderRequest()
                 .schedule()

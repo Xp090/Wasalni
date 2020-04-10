@@ -34,14 +34,15 @@ class SocketConnection(private val moshi: Moshi, private val okHttpClient: OkHtt
             IO.setDefaultOkHttpCallFactory(okHttpClient)
             IO.setDefaultOkHttpWebSocketFactory(okHttpClient)
             socket = IO.socket(BuildConfig.BASE_URL)
+            eventFactory = SocketEventFactory(moshi, socket)
             socket.on(Socket.EVENT_CONNECT){
-                onConnected()
                 Timber.d("Socket.Io ${socket.id()}")
+                onConnected()
             }
         }
         socket.connect()
 
-        eventFactory = SocketEventFactory(moshi, socket)
+
     }
 
     fun disconnectSocket() {

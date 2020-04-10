@@ -50,21 +50,23 @@ abstract class BaseTrackingService<TR: TripRepository> : Service() {
                 locationResult?.let { onLocationChange(it.lastLocation) }
             }
         }
+
+
+        tripRepository.initSocketConnection(this::onSocketConnected)
+    }
+
+    protected open fun onSocketConnected (){
+        Timber.d("Socket.Io Connected")
         val request = LocationRequest()
         request.interval = UPDATE_INTERVAL.toLong()
         request.fastestInterval = FASTEST_INTERVAL.toLong()
         request.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
         request.smallestDisplacement = DISPLACEMENT.toFloat()
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this@BaseTrackingService)
-
-        tripRepository.initSocketConnection {
-            Timber.d("Socket.Io Connected")
-            fusedLocationProviderClient.requestLocationUpdates(request,
-                locationCallback,
-                Looper.getMainLooper())
-        }
+        fusedLocationProviderClient.requestLocationUpdates(request,
+            locationCallback,
+            Looper.getMainLooper())
     }
-
 
     private fun onLocationChange(location: Location) {
         Timber.w(location.latitude.toString())
