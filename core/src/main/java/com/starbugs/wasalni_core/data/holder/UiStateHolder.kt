@@ -29,7 +29,7 @@ class TripStateLiveData : MutableLiveData<TripStateHolder>(TripStateHolder.Init)
        }
     }
 
-    fun preivousState(){
+    fun previousState(){
         value = when (value){
             is TripStateHolder.Init -> TripStateHolder.Init
             is TripStateHolder.SelectDestination -> TripStateHolder.Init

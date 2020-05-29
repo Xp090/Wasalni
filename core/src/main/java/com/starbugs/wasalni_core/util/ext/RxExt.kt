@@ -5,7 +5,7 @@ package com.starbugs.wasalni_core.util.ext
 
 import androidx.lifecycle.MutableLiveData
 import com.starbugs.wasalni_core.data.holder.NetworkState
-import com.starbugs.wasalni_core.util.livedata.StateLiveData
+import com.starbugs.wasalni_core.util.`typealias`.StateLiveData
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single

@@ -1,6 +1,7 @@
 package com.starbugs.wasalni_core.util.socket.event
 
 import com.squareup.moshi.Moshi
+import com.starbugs.wasalni_core.data.holder.ApplicationSocketError
 import com.starbugs.wasalni_core.data.holder.NetworkState
 import com.starbugs.wasalni_core.util.exception.SocketErrorException
 import com.starbugs.wasalni_core.util.ext.mapToNetworkState
@@ -23,30 +24,24 @@ open class SocketEventListener<E,L>(
 ) : SocketEventEmitter<E>(moshi, socket, eventName, emitValueType) {
 
 
-
-//   protected fun startListening(
-//        eventName: String = this.eventName): SocketEventListener<E,L> {
-//        stopListening(eventName)
-//        socket.on(eventName) {
-//            handleIncomingInput(it)
-//        }
-//        return this
-//    }
-
     @Suppress("UNCHECKED_CAST")
     protected open fun handleIncomingInput (inputArgs: Array<Any>) {
         val input = inputArgs[0]
         try {
-            if (input is String) {
-                eventSubject.onNext(NetworkState.failureFromThrowable(SocketErrorException(input)) )
-                return
-            }else if (listenValueType.isInstance(input)) {
+            if (listenValueType.isInstance(input)) {
                 eventSubject.onNext(NetworkState.Success(input as L))
+            }else {
+                val jsonObject = input as JSONObject
+                if (jsonObject.has("statusCode") && jsonObject.has("message")) {
+                    eventSubject.onNext(NetworkState
+                        .failureFromErrorString(ApplicationSocketError::class,jsonObject.getString("message")))
+                }else {
+                    val jsonAdapter = moshi.adapter(listenValueType)
+                    val data: L? = jsonAdapter.fromJson(jsonObject.toString())
+                    eventSubject.onNext(NetworkState.Success(data!!))
+                }
             }
-            val jsonAdapter = moshi.adapter(listenValueType)
-            val jsonObject = input as JSONObject
-            val data: L? = jsonAdapter.fromJson(jsonObject.toString())
-            eventSubject.onNext(NetworkState.Success(data!!))
+
         } catch (ex: Exception) {
             Timber.e(ex)
             eventSubject.onError(RuntimeException())//todo better handle
@@ -56,7 +51,7 @@ open class SocketEventListener<E,L>(
     fun listen(
         eventName: String = this.eventName
     ): Subject<NetworkState<L>> {
-   //     stopListening(eventName)
+        stopListening(eventName)
         Timber.w("Socket.Io: $eventName ${socket.id()}")
         socket.on(eventName) {
             handleIncomingInput(it)
@@ -68,7 +63,7 @@ open class SocketEventListener<E,L>(
         eventName: String = this.eventName
     ): Subject<NetworkState<L>> {
         resetSubject()
-       // stopListening(eventName)
+        stopListening(eventName)
         socket.once(eventName) {
             handleIncomingInput(it)
         }

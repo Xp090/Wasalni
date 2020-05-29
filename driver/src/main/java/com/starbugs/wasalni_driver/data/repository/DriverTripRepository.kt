@@ -9,6 +9,7 @@ import com.starbugs.wasalni_core.data.repository.TripRepository
 import com.starbugs.wasalni_core.data.repository.UserRepository
 import com.starbugs.wasalni_core.data.source.SocketConnection
 import com.starbugs.wasalni_core.data.source.TripApi
+import com.starbugs.wasalni_core.util.`typealias`.StateSubject
 import io.reactivex.Observable
 
 
@@ -20,12 +21,12 @@ class DriverTripRepository(
 ) : TripRepository(socketConnection, userRepository, tripApi, geocoder) {
 
 
-    val currentTripRequest = MutableLiveData<NetworkState<SentRideRequest>>(NetworkState.Initial())
+    val currentTripRequest = StateSubject.createBehaviorSubject<SentRideRequest>(NetworkState.Initial())
 
 
     fun listenForRiderRequest(): Observable<NetworkState<SentRideRequest>> {
         return socketConnection.driverListenForRiderRequestEvent.listen()
-            .doOnNext { currentTripRequest.postValue(it) }
+            .doOnNext { currentTripRequest.onNext(it) }
     }
 
     fun acceptRiderRequest() {
@@ -35,7 +36,7 @@ class DriverTripRepository(
 
     fun declineRiderRequest() {
         socketConnection.driverListenForRiderRequestEvent.callback(false)
-        currentTripRequest.value = NetworkState.Initial()
+        currentTripRequest.onNext(NetworkState.Initial())
 
     }
 }

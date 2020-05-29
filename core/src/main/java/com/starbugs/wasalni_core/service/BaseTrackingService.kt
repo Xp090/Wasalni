@@ -66,6 +66,8 @@ abstract class BaseTrackingService<TR: TripRepository> : Service() {
         fusedLocationProviderClient.requestLocationUpdates(request,
             locationCallback,
             Looper.getMainLooper())
+
+        tripRepository.getCurrentTrip().subscribe()
     }
 
     private fun onLocationChange(location: Location) {

@@ -12,12 +12,12 @@ import retrofit2.http.POST
 interface UserApi {
 
     @FormUrlEncoded
-    @POST("/user/login")
-    fun login(@Field("email")  email :String
+    @POST("/auth/login")
+    fun login(@Field("username")  email :String
                        ,@Field("password")  password :String): Single<NetworkState<LoginResponse>>
 
     @GET("/user/data")
-    fun getUser(): Single<NetworkState<User>>
+    fun getUserData(): Single<NetworkState<User>>
 
 
 }

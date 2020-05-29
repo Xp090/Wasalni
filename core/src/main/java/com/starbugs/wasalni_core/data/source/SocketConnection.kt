@@ -28,6 +28,8 @@ class SocketConnection(private val moshi: Moshi, private val okHttpClient: OkHtt
 
     val updateLocationEvent by lazy {eventFactory.createEmitter<LatLng>(SocketEvent.UpdateLocation)}
 
+    val listenForDriverLocation by lazy { eventFactory.createListenerWithBehaviorSubject<LatLng>(SocketEvent.RiderListenForDriverLocation) }
+
 
     fun initSocket(onConnected: () -> Unit) {
         if (!::socket.isInitialized) {

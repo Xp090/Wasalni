@@ -19,11 +19,6 @@ class MoshiConverterFactoryForNetworkState(moshi: Moshi) : Converter.Factory() {
         annotations: Array<Annotation>,
         retrofit: Retrofit
     ): Converter<ResponseBody, *>? {
-//        val wrappedType = object : ParameterizedType {
-//            override fun getActualTypeArguments(): Array<Type> = arrayOf(type)
-//            override fun getOwnerType(): Type? = null
-//            override fun getRawType(): Type = NetworkState::class.java
-//        }
         val actualType = getParameterUpperBound(0, type as ParameterizedType)
         val moshiConverter: Converter<ResponseBody, *>? =
             moshiConverterFactory.responseBodyConverter(actualType, annotations, retrofit)

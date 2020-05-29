@@ -12,6 +12,7 @@ data class LoginResponse(
     val user: User
 )
 
+
 @JsonClass(generateAdapter = true)
 data class User(
     @Json(name = "createdAt")

@@ -3,6 +3,7 @@ package com.starbugs.wasalni_core.data.holder
 import com.starbugs.wasalni_core.util.annotation.ErrorStringId
 import com.starbugs.wasalni_core.util.extra.ResponseErrorParser
 import timber.log.Timber
+import kotlin.reflect.KClass
 
 sealed class NetworkState<T> {
 
@@ -37,6 +38,11 @@ sealed class NetworkState<T> {
                 ResponseErrorParser.parse(throwable)
             )
         }
+        fun <T, E: ApplicationError> failureFromErrorString(errorTypeClass: KClass<E>, errorResponse: String?): Failure<T> {
+            return Failure(
+                ResponseErrorParser.findErrorClass(errorTypeClass,errorResponse)
+            )
+        }
     }
 }
 
@@ -57,6 +63,10 @@ sealed class ApplicationHttpError : ApplicationError() {
 
     @ErrorStringId("wrong_username_or_password")
     object WrongUserNameOrPassword : ApplicationHttpError()
+
+    @ErrorStringId("no_current_trip")
+    object NoCurrentTrip : ApplicationHttpError()
+
 
 }
 

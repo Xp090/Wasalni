@@ -5,7 +5,7 @@ import com.starbugs.wasalni_driver.data.repository.DriverTripRepository
 
 
 class IncomingRequestViewModel(private val  tripRepository: DriverTripRepository) : BaseViewModel() {
-    val incomingRequestRider = tripRepository.currentTripRequest
+    val incomingRequestRider = tripRepository.currentTripRequest.value
 
     fun accept() {
         tripRepository.acceptRiderRequest()

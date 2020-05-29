@@ -5,25 +5,25 @@ import com.starbugs.wasalni_core.data.model.User
 import com.starbugs.wasalni_core.data.source.UserApi
 import com.starbugs.wasalni_core.data.holder.NetworkState
 import com.starbugs.wasalni_core.data.holder.ApplicationPersistenceError
-import com.starbugs.wasalni_core.util.ext.mapToNetworkState
 import io.reactivex.Single
+import io.reactivex.subjects.BehaviorSubject
 
-class UserRepository (private val userApi: UserApi,
-                      private val credentialsRepository: CredentialsRepository) {
-
-    var userData: MutableLiveData<User?> = MutableLiveData()
-        private set
-
+class UserRepository(
+    private val userApi: UserApi,
+    private val credentialsRepository: CredentialsRepository
+) {
 
 
-    fun login(email: String, password: String): Single<NetworkState<User>>  {
+    val userData: BehaviorSubject<User> = BehaviorSubject.create()
+
+    fun login(email: String, password: String): Single<NetworkState<User>> {
         return userApi.login(email, password)
-            .doOnSuccess {
-                credentialsRepository.userToken = it.success()?.token
-                userData.postValue(it.success()?.user)
+            .doOnSuccess { resp ->
+                credentialsRepository.userToken = resp.success()?.token
+                resp.success()?.user?.also { userData.onNext(it) }
             }.map {
-                when (it) {
-                    is NetworkState.Success -> NetworkState.Success<User>(it.success()!!.user)
+                  when (it) {
+                    is NetworkState.Success -> NetworkState.Success(it.success()!!.user)
                     else -> NetworkState.Failure<User>(it.failure()!!)
                 }
 
@@ -32,12 +32,15 @@ class UserRepository (private val userApi: UserApi,
 
     fun fetchLoggedInUserData(): Single<NetworkState<User>> {
         return if (credentialsRepository.userToken != null) {
-            userApi.getUser()
-                .doOnSuccess { userData.postValue(it.success()) }
-        }else {
+            userApi.getUserData()
+                .doOnSuccess { resp -> resp.success()?.also { userData.onNext(it) }  }
+
+        } else {
             Single.just(
                 NetworkState.Failure(
-                    ApplicationPersistenceError.UserNotLoggedIn))
+                    ApplicationPersistenceError.UserNotLoggedIn
+                )
+            )
         }
 
     }

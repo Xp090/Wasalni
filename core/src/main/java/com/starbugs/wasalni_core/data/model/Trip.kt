@@ -37,11 +37,7 @@ data class SentRideRequest(
     val requestStatus: String
 )
 
-/*
- requestsSent: Map<String,SentRideRequest>
-    requestStatus: RideDriverResponse
-    driver: mongoose.Types.ObjectId | DriverDocument
- */
+
 @JsonClass(generateAdapter = true)
 data class Trip(
     @Json(name = "id")

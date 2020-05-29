@@ -18,13 +18,13 @@ fun Fragment.withArguments(vararg arguments: Pair<String, Serializable>): Fragme
 /**
  * Retrieve property from intent
  */
-fun <T : Any> FragmentActivity.argument(key: String) = kotlin.lazy { intent.extras[key] as T }
+fun <T : Any> FragmentActivity.argument(key: String) = kotlin.lazy { intent.extras?.get(key) as T }
 
 /**
  * Retrieve property with default value from intent
  */
 fun <T : Any> FragmentActivity.argument(key: String, defaultValue: T? = null) = kotlin.lazy {
-    intent.extras[key] as? T ?: defaultValue
+    intent.extras?.get(key) as? T ?: defaultValue
 }
 
 /**

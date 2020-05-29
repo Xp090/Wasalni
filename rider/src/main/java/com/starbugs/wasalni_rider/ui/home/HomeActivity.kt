@@ -10,6 +10,7 @@ import android.os.IBinder
 import android.widget.Toast
 import androidx.lifecycle.Observer
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.starbugs.wasalni_core.ui.BaseActivity
 import com.starbugs.wasalni_rider.R
@@ -51,11 +52,14 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
     private var destinationMarker: Marker? = null
     private var pickUpMarker: Marker? = null
 
+    private var driverMarker: Marker? = null
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as RxMapsFragment?
-        mapFragment!!.getRxMapAsync(this)
+            .findFragmentById(R.id.map) as RxMapsFragment
+        mapFragment.getRxMapAsync(this)
 
         destinationPlaceSelect =
             supportFragmentManager.findFragmentById(R.id.destination_place_select) as AutocompleteSupportFragment
@@ -122,7 +126,7 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
                     mViewModel.isLoading.value = true
                 }
                 is TripStateHolder.FindDriver -> {
-                    mViewModel.tripUiState.preivousState();
+                    mViewModel.tripUiState.previousState();
                     mViewModel.isLoading.value = false
                     return@setOnClickListener
                 }
@@ -131,21 +135,31 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
 
         }
 
-        mViewModel.trip.observe(this, Observer {state ->
+        mViewModel.currentTrip.observe(this, Observer { state ->
+
             state?.let {
                 when (it) {
                     is NetworkState.Success -> {
-                        Toast.makeText(this,"Driver ${it.data.driver.email} accepted your request",Toast.LENGTH_LONG).show()
-                        Timber.i("DRIVER: ${it.data.driver.email}")
+                        if (mViewModel.tripUiState.value is TripStateHolder.FindDriver) {
+                            mViewModel.tripUiState.nextState()
+                            Toast.makeText(this,"Driver ${it.data.driver.email} accepted your request",Toast.LENGTH_LONG).show()
+                            Timber.i("DRIVER: ${it.data.driver.email}")
+                        } else if (mViewModel.tripUiState.value is TripStateHolder.Init) {
+                            mViewModel.tripUiState.value = TripStateHolder.TripStarted
+                        }
                     }
                     is NetworkState.Failure -> {
-                        Toast.makeText(this,it.error.localizedMessage,Toast.LENGTH_LONG).show()
-                        Timber.i("DRIVER: ${it.error.localizedMessage}")
-                        rxGoogleMap.mapInstance.clear()
+                        if (mViewModel.tripUiState.value is TripStateHolder.FindDriver) {
+                            Toast.makeText(this,it.error.localizedMessage,Toast.LENGTH_LONG).show()
+                            Timber.i("DRIVER: ${it.error.localizedMessage}")
+                            rxGoogleMap.mapInstance.clear()
+                        }
+                        mViewModel.tripUiState.value = TripStateHolder.Init
                     }
                 }
             }
         })
+
     }
 
     override fun onStart() {
@@ -173,10 +187,6 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
             })
     }
 
-    override fun onStop() {
-        super.onStop()
-      //  unbindService(this)
-    }
 
 
     override fun onServiceConnected(name: ComponentName, service: IBinder) {
@@ -220,6 +230,19 @@ class HomeActivity : BaseActivity<ActivityHomeBinding>(), OnRxMapReadyCallback, 
             }
 
         }
+
+        mViewModel.driverLocation.observe(this, Observer {
+            when (it) {
+                is NetworkState.Success -> {
+                    if (driverMarker == null) {
+                        driverMarker = rxGoogleMap.mapInstance.addMarker(MarkerOptions().position(it.data))
+                    }else {
+                        driverMarker!!.position = it.data
+                    }
+
+                }
+            }
+        })
     }
 
     private fun setDestinationMarker (lngLat: LatLng = rxGoogleMap.mapInstance.cameraPosition.target, animate: Boolean = true){
